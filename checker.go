@@ -15,6 +15,7 @@ type Checker struct {
 	cfg      Config
 	storage  *Storage
 	telegram *Telegram
+	loc      *time.Location
 
 	mu          sync.Mutex
 	lastPrices  map[string]float64 // alert ID -> last price (horizontal crossing)
@@ -22,11 +23,12 @@ type Checker struct {
 }
 
 // NewChecker creates the price monitor.
-func NewChecker(cfg Config, storage *Storage, telegram *Telegram) *Checker {
+func NewChecker(cfg Config, storage *Storage, telegram *Telegram, loc *time.Location) *Checker {
 	return &Checker{
 		cfg:        cfg,
 		storage:    storage,
 		telegram:   telegram,
+		loc:        loc,
 		lastPrices:  make(map[string]float64),
 		wasTouching: make(map[string]bool),
 	}
@@ -147,7 +149,9 @@ func (c *Checker) checkHorizontal(alert Alert, price float64) {
 }
 
 func (c *Checker) checkChannel(alert Alert, price float64) {
-	upper, lower := channelBounds(alert, time.Now().Unix())
+	// Current instant; channel line is evaluated at "now" in the configured timezone.
+	nowUnix := time.Now().In(c.loc).Unix()
+	upper, lower := channelBounds(alert, nowUnix)
 	tol := c.cfg.TouchTolerancePercent / 100.0
 
 	touchUpper := withinTolerance(price, upper, tol)

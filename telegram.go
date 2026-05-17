@@ -12,14 +12,16 @@ import (
 type Telegram struct {
 	token  string
 	chatID string
+	loc    *time.Location
 	client *http.Client
 }
 
 // NewTelegram creates a sender; empty token/chatID means notifications are skipped.
-func NewTelegram(token, chatID string) *Telegram {
+func NewTelegram(token, chatID string, loc *time.Location) *Telegram {
 	return &Telegram{
 		token:  token,
 		chatID: chatID,
+		loc:    loc,
 		client: &http.Client{Timeout: 10 * time.Second},
 	}
 }
@@ -30,7 +32,7 @@ func (t *Telegram) SendAlert(alert Alert, detail string, price float64) error {
 		return nil // configured off
 	}
 
-	now := time.Now().Format("2006-01-02 15:04")
+	now := formatWallClock(t.loc, time.Now())
 	typeLabel := "Horizontal"
 	if alert.Type == AlertChannel {
 		typeLabel = "Channel"

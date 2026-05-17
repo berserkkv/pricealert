@@ -63,6 +63,7 @@ Do **not** use `go run main.go` — that only compiles `main.go` and will fail w
 | `telegram_chat_id`        | `""`          | Telegram chat ID                                       |
 | `storage_file`            | `alerts.json` | Alert persistence file                                 |
 | `touch_tolerance_percent` | `0.15`        | Channel touch tolerance (±%)                           |
+| `utc`                     | `Europe/Istanbul` | IANA timezone for diagonal channel datetimes       |
 
 
 ## Market data
@@ -72,6 +73,24 @@ Prices come from **Binance USDT-M Futures** (no API key required):
 `GET https://fapi.binance.com/fapi/v1/ticker/price?symbol=SOLUSDT`
 
 Use the same symbol names as on futures (e.g. `SOLUSDT`, `BTCUSDT`).
+
+## Timezone (diagonal channel)
+
+Set `utc` in `config.json` to an [IANA timezone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) name. Default is `Europe/Istanbul` (UTC+3).
+
+All channel datetime inputs and calculations use this timezone:
+
+- UI datetime pickers show/edit times in this zone
+- API parses `datetime-local` values as wall time in this zone
+- Channel line evaluation uses the current instant in this zone
+
+Example:
+
+```json
+"utc": "Europe/Istanbul"
+```
+
+Match the same timezone you use on TradingView charts.
 
 ## Channel math
 

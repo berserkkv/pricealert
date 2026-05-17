@@ -19,11 +19,12 @@ var embeddedFS embed.FS
 type Web struct {
 	cfg     Config
 	storage *Storage
+	loc     *time.Location
 }
 
 // NewWeb creates the HTTP server handler setup.
-func NewWeb(cfg Config, storage *Storage) *Web {
-	return &Web{cfg: cfg, storage: storage}
+func NewWeb(cfg Config, storage *Storage, loc *time.Location) *Web {
+	return &Web{cfg: cfg, storage: storage, loc: loc}
 }
 
 // Handler returns the root mux.
@@ -36,6 +37,7 @@ func (w *Web) Handler() http.Handler {
 	mux.HandleFunc("PUT /api/alerts/{id}", w.handleUpdateAlert)
 	mux.HandleFunc("DELETE /api/alerts/{id}", w.handleDeleteAlert)
 	mux.HandleFunc("POST /api/alerts/{id}/toggle", w.handleToggleAlert)
+	mux.HandleFunc("GET /api/config", w.handleConfig)
 
 	// Static files from embed
 	staticSub, _ := fs.Sub(embeddedFS, "static")
@@ -72,7 +74,7 @@ func (w *Web) handleCreateAlert(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	alert, err := inputToAlert(input, "")
+	alert, err := w.inputToAlert(input, "")
 	if err != nil {
 		writeError(rw, err.Error(), http.StatusBadRequest)
 		return
@@ -103,7 +105,7 @@ func (w *Web) handleUpdateAlert(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	alert, err := inputToAlert(input, id)
+	alert, err := w.inputToAlert(input, id)
 	if err != nil {
 		writeError(rw, err.Error(), http.StatusBadRequest)
 		return
@@ -130,6 +132,14 @@ func (w *Web) handleDeleteAlert(rw http.ResponseWriter, r *http.Request) {
 	rw.WriteHeader(http.StatusNoContent)
 }
 
+func (w *Web) handleConfig(rw http.ResponseWriter, r *http.Request) {
+	tz := w.cfg.UTC
+	if tz == "" {
+		tz = "Europe/Istanbul"
+	}
+	writeJSON(rw, map[string]string{"utc": tz})
+}
+
 func (w *Web) handleToggleAlert(rw http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	alert, err := w.storage.ToggleEnabled(id)
@@ -150,7 +160,7 @@ func readAlertInput(body io.Reader) (AlertInput, error) {
 }
 
 // inputToAlert converts API input to a stored Alert.
-func inputToAlert(in AlertInput, id string) (Alert, error) {
+func (w *Web) inputToAlert(in AlertInput, id string) (Alert, error) {
 	if in.Pair == "" {
 		in.Pair = "SOLUSDT"
 	}
@@ -176,11 +186,11 @@ func inputToAlert(in AlertInput, id string) (Alert, error) {
 		a.Condition = in.Condition
 
 	case AlertChannel:
-		p1, err := parseDateTimeLocal(in.P1DateTime)
+		p1, err := parseDateTimeInZone(w.loc, in.P1DateTime)
 		if err != nil {
 			return Alert{}, fmt.Errorf("point 1 datetime: %w", err)
 		}
-		p2, err := parseDateTimeLocal(in.P2DateTime)
+		p2, err := parseDateTimeInZone(w.loc, in.P2DateTime)
 		if err != nil {
 			return Alert{}, fmt.Errorf("point 2 datetime: %w", err)
 		}
@@ -205,24 +215,6 @@ func inputToAlert(in AlertInput, id string) (Alert, error) {
 	return a, nil
 }
 
-// parseDateTimeLocal parses "2026-05-17T10:15" from datetime-local input.
-func parseDateTimeLocal(s string) (int64, error) {
-	s = strings.TrimSpace(s)
-	if s == "" {
-		return 0, fmt.Errorf("empty datetime")
-	}
-	// datetime-local has no timezone; treat as local time
-	t, err := time.ParseInLocation("2006-01-02T15:04", s, time.Local)
-	if err != nil {
-		// also allow space separator
-		t, err = time.ParseInLocation("2006-01-02 15:04", s, time.Local)
-	}
-	if err != nil {
-		return 0, err
-	}
-	return t.Unix(), nil
-}
-
 func newID() string {
 	return fmt.Sprintf("%d", time.Now().UnixNano())
 }
@@ -241,8 +233,8 @@ func writeError(rw http.ResponseWriter, msg string, code int) {
 }
 
 // StartHTTPServer runs the web server.
-func StartHTTPServer(cfg Config, storage *Storage) *http.Server {
-	web := NewWeb(cfg, storage)
+func StartHTTPServer(cfg Config, storage *Storage, loc *time.Location) *http.Server {
+	web := NewWeb(cfg, storage, loc)
 	addr := fmt.Sprintf(":%d", cfg.HTTPPort)
 	srv := &http.Server{
 		Addr:    addr,
@@ -255,12 +247,4 @@ func StartHTTPServer(cfg Config, storage *Storage) *http.Server {
 		}
 	}()
 	return srv
-}
-
-// formatDateTimeLocal formats unix time for datetime-local input.
-func formatDateTimeLocal(unix int64) string {
-	if unix == 0 {
-		return ""
-	}
-	return time.Unix(unix, 0).In(time.Local).Format("2006-01-02T15:04")
 }

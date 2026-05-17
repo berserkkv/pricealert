@@ -17,22 +17,28 @@ func main() {
 		log.Fatalf("config: %v", err)
 	}
 
+	loc, err := LoadTimezone(cfg)
+	if err != nil {
+		log.Fatalf("timezone: %v", err)
+	}
+	log.Printf("timezone: %s (channel datetimes and alerts use this)", cfg.UTC)
+
 	storage, err := NewStorage(cfg.StorageFile)
 	if err != nil {
 		log.Fatalf("storage: %v", err)
 	}
 
-	telegram := NewTelegram(cfg.TelegramToken, cfg.TelegramChatID)
+	telegram := NewTelegram(cfg.TelegramToken, cfg.TelegramChatID, loc)
 	if !telegram.Enabled() {
 		log.Println("telegram: not configured (set telegram_token and telegram_chat_id in config.json)")
 	}
 
-	checker := NewChecker(cfg, storage, telegram)
+	checker := NewChecker(cfg, storage, telegram, loc)
 	stop := make(chan struct{})
 
 	go checker.Run(stop)
 
-	srv := StartHTTPServer(cfg, storage)
+	srv := StartHTTPServer(cfg, storage, loc)
 
 	// Graceful shutdown on Ctrl+C
 	sig := make(chan os.Signal, 1)

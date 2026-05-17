@@ -263,6 +263,12 @@ form label {
   margin-top: 0.1rem;
 }
 
+.tz-hint {
+  margin: 0 0 0.85rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
 form input,
 form select {
   display: block;

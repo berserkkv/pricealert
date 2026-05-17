@@ -7,17 +7,35 @@ const formChannel = document.getElementById('form-channel');
 const tabButtons = document.querySelectorAll('.tab-btn');
 const panelHorizontal = document.getElementById('panel-horizontal');
 const panelChannel = document.getElementById('panel-channel');
+const tzHint = document.getElementById('tz-hint');
+
+let appTimezone = 'Europe/Istanbul';
+
+async function loadAppConfig() {
+  try {
+    const cfg = await api('/api/config');
+    if (cfg && cfg.utc) {
+      appTimezone = cfg.utc;
+    }
+  } catch (_) {
+    /* keep default */
+  }
+  if (tzHint) {
+    tzHint.textContent = 'Datetimes use timezone: ' + appTimezone;
+  }
+}
 
 function fmtTime(iso) {
   if (!iso || iso === '0001-01-01T00:00:00Z') return '—';
   const d = new Date(iso);
   if (isNaN(d)) return '—';
-  return d.toLocaleString(undefined, {
+  return new Intl.DateTimeFormat(undefined, {
+    timeZone: appTimezone,
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-  });
+  }).format(d);
 }
 
 function typeLabel(type) {
@@ -27,14 +45,20 @@ function typeLabel(type) {
 function unixToDatetimeLocal(unix) {
   if (!unix) return '';
   const d = new Date(unix * 1000);
-  const pad = (n) => String(n).padStart(2, '0');
-  return (
-    d.getFullYear() +
-    '-' + pad(d.getMonth() + 1) +
-    '-' + pad(d.getDate()) +
-    'T' + pad(d.getHours()) +
-    ':' + pad(d.getMinutes())
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-GB', {
+      timeZone: appTimezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    })
+      .formatToParts(d)
+      .map((p) => [p.type, p.value])
   );
+  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
 }
 
 function switchTab(tab, scrollToForm) {
@@ -272,5 +296,8 @@ document.querySelectorAll('[data-cancel]').forEach((btn) => {
   });
 });
 
-loadAlerts();
-setInterval(loadAlerts, 10000);
+(async function init() {
+  await loadAppConfig();
+  loadAlerts();
+  setInterval(loadAlerts, 10000);
+})();

@@ -14,6 +14,7 @@ type Config struct {
 	TelegramChatID        string  `json:"telegram_chat_id"`
 	StorageFile           string  `json:"storage_file"`
 	TouchTolerancePercent float64 `json:"touch_tolerance_percent"`
+	UTC                   string  `json:"utc"` // IANA timezone for channel datetimes, e.g. Europe/Istanbul
 }
 
 // defaultConfig returns built-in defaults.
@@ -26,6 +27,7 @@ func defaultConfig() Config {
 		TelegramChatID:        "",
 		StorageFile:           "alerts.json",
 		TouchTolerancePercent: 0.15,
+		UTC:                   "Europe/Istanbul",
 	}
 }
 
@@ -67,6 +69,9 @@ func LoadConfig(path string) (Config, error) {
 	}
 	if fileCfg.TouchTolerancePercent != 0 {
 		cfg.TouchTolerancePercent = fileCfg.TouchTolerancePercent
+	}
+	if fileCfg.UTC != "" {
+		cfg.UTC = fileCfg.UTC
 	}
 
 	return cfg, nil
