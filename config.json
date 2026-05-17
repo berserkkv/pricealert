@@ -1,0 +1,9 @@
+{
+  "http_port": 8082,
+  "poll_interval_sec": 5,
+  "binance_symbol": "SOLUSDT",
+  "telegram_token": "8430827322:AAHeq_HiG6lCJmJwxrWPB25xX0Y20ZlB4qo",
+  "telegram_chat_id": "7217926764",
+  "storage_file": "alerts.json",
+  "touch_tolerance_percent": 0.15
+}

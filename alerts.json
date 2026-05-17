@@ -1,0 +1,39 @@
+[
+  {
+    "id": "1779033434205099463",
+    "pair": "SOLUSDT",
+    "type": "horizontal",
+    "enabled": true,
+    "label": "name",
+    "created_at": "2026-05-17T18:57:14.205101566+03:00",
+    "last_trigger": "2026-05-17T18:58:29.264145679+03:00",
+    "target_price": 86.39,
+    "condition": "below"
+  },
+  {
+    "id": "1779033478872712548",
+    "pair": "SOLUSDT",
+    "type": "horizontal",
+    "enabled": true,
+    "label": "message it is",
+    "created_at": "2026-05-17T18:57:58.872716705+03:00",
+    "last_trigger": "2026-05-17T19:27:14.980301857+03:00",
+    "target_price": 86.45,
+    "condition": "above"
+  },
+  {
+    "id": "1779033910684812208",
+    "pair": "SOLUSDT",
+    "type": "channel",
+    "enabled": true,
+    "label": "channel",
+    "created_at": "2026-05-17T19:05:10.684816295+03:00",
+    "last_trigger": "2026-05-17T19:30:45.083735216+03:00",
+    "p1_time": 1779021900,
+    "p1_price": 87.02,
+    "p2_time": 1779041700,
+    "p2_price": 86.25,
+    "offset": -0.33,
+    "trigger_side": "both"
+  }
+]

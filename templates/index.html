@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Crypto Price Alerts</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>Price Alerts</h1>
+    <p class="subtitle">Binance Futures · Telegram</p>
+  </header>
+
+  <main>
+   
+
+    <section class="card card-form">
+      <h2>Add Alert</h2>
+
+      <div class="tabs" role="tablist">
+        <button type="button" class="tab-btn active" role="tab" aria-selected="true" aria-controls="panel-horizontal" data-tab="horizontal">
+          Horizontal
+        </button>
+        <button type="button" class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-channel" data-tab="channel">
+          Diagonal
+        </button>
+      </div>
+
+      <div id="panel-horizontal" class="tab-panel active" role="tabpanel">
+        <form id="form-horizontal">
+          <input type="hidden" name="type" value="horizontal">
+          <input type="hidden" name="edit_id" value="">
+          <label>Pair <input name="pair" placeholder="SOLUSDT" autocomplete="off" required></label>
+          <label>Target price <input name="target_price" type="number" step="any" inputmode="decimal" required></label>
+          <label>Condition
+            <select name="condition" required>
+              <option value="above">Above</option>
+              <option value="below">Below</option>
+            </select>
+          </label>
+          <label>Label <input name="label" placeholder="Optional"></label>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Save Alert</button>
+            <button type="button" class="btn-secondary" data-cancel="horizontal" hidden>Cancel</button>
+          </div>
+        </form>
+      </div>
+
+      <div id="panel-channel" class="tab-panel" role="tabpanel" hidden>
+        <form id="form-channel">
+          <input type="hidden" name="type" value="channel">
+          <input type="hidden" name="edit_id" value="">
+          <label>Pair <input name="pair" placeholder="SOLUSDT" autocomplete="off" required></label>
+
+          <fieldset>
+            <legend>Point 1</legend>
+            <label>Datetime <input name="p1_datetime" type="datetime-local" required></label>
+            <label>Price <input name="p1_price" type="number" step="any" inputmode="decimal" required></label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Point 2</legend>
+            <label>Datetime <input name="p2_datetime" type="datetime-local" required></label>
+            <label>Price <input name="p2_price" type="number" step="any" inputmode="decimal" required></label>
+          </fieldset>
+
+          <label>Offset <span class="hint">parallel line, e.g. -5.22</span>
+            <input name="offset" type="number" step="any" inputmode="decimal" required>
+          </label>
+          <label>Trigger side
+            <select name="trigger_side" required>
+              <option value="upper">Upper</option>
+              <option value="lower">Lower</option>
+              <option value="both">Both</option>
+            </select>
+          </label>
+          <label>Label <input name="label" placeholder="Optional"></label>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Save Alert</button>
+            <button type="button" class="btn-secondary" data-cancel="channel" hidden>Cancel</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Saved Alerts</h2>
+      <div class="table-wrap">
+        <table id="alerts-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Pair</th>
+              <th>Type</th>
+              <th>On</th>
+              <th>Created</th>
+              <th>Triggered</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="alerts-body">
+            <tr><td colspan="7" class="empty">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="alerts-cards" class="alerts-cards" aria-label="Alerts list"></div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
