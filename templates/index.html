@@ -3,15 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Crypto Price Alerts</title>
+  <title>Price Alerts</title>
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <header>
-    <h1>Price Alerts</h1>
-    <p class="subtitle">Binance Futures · Telegram</p>
-  </header>
-
   <main>
    
 
@@ -31,7 +26,18 @@
         <form id="form-horizontal">
           <input type="hidden" name="type" value="horizontal">
           <input type="hidden" name="edit_id" value="">
-          <label>Pair <input name="pair" placeholder="SOLUSDT" autocomplete="off" required></label>
+          <label>
+            Pair 
+            <input name="pair" placeholder="SOLUSDT" autocomplete="off" list="crypto-pairs" required>
+          </label>
+          
+          <datalist id="crypto-pairs">
+            <option value="SOLUSDT">
+            <option value="BTCUSDT">
+            <option value="ETHUSDT">
+            <option value="BNBUSDT">
+            <option value="XRPUSDT">
+          </datalist>
           <label>Target price <input name="target_price" type="number" step="any" inputmode="decimal" required></label>
           <label>Condition
             <select name="condition" required>
@@ -52,8 +58,18 @@
         <form id="form-channel">
           <input type="hidden" name="type" value="channel">
           <input type="hidden" name="edit_id" value="">
-          <label>Pair <input name="pair" placeholder="SOLUSDT" autocomplete="off" required></label>
-
+          <label>
+            Pair 
+            <input name="pair" placeholder="SOLUSDT" autocomplete="off" list="crypto-pairs" required>
+          </label>
+          
+          <datalist id="crypto-pairs">
+            <option value="SOLUSDT">
+            <option value="BTCUSDT">
+            <option value="ETHUSDT">
+            <option value="BNBUSDT">
+            <option value="XRPUSDT">
+          </datalist>
           <fieldset>
             <legend>Point 1</legend>
             <label>Datetime <input name="p1_datetime" type="datetime-local" required></label>
