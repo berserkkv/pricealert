@@ -25,7 +25,7 @@ sudo systemctl stop pricealert 2>/dev/null || true && curl -fsSL https://raw.git
 ## Build
 
 ```bash
-go build -o price-alert
+go build -o pricealert
 ```
 
 To run without building a binary (must pass the whole package, not a single file):
@@ -54,16 +54,16 @@ Do **not** use `go run main.go` — that only compiles `main.go` and will fail w
 `config.json` overrides built-in defaults. Missing keys keep defaults.
 
 
-| Key                       | Default       | Description                                            |
-| ------------------------- | ------------- | ------------------------------------------------------ |
-| `http_port`               | `8080`        | Web server port                                        |
-| `poll_interval_sec`       | `5`           | Binance price poll interval                            |
-| `binance_symbol`          | `SOLUSDT`     | Default futures symbol (alerts can set their own pair) |
-| `telegram_token`          | `""`          | Telegram bot token                                     |
-| `telegram_chat_id`        | `""`          | Telegram chat ID                                       |
-| `storage_file`            | `alerts.json` | Alert persistence file                                 |
-| `touch_tolerance_percent` | `0.15`        | Channel touch tolerance (±%)                           |
-| `utc`                     | `Europe/Istanbul` | IANA timezone for diagonal channel datetimes       |
+| Key                       | Default           | Description                                            |
+| ------------------------- | ----------------- | ------------------------------------------------------ |
+| `http_port`               | `8080`            | Web server port                                        |
+| `poll_interval_sec`       | `5`               | Binance price poll interval                            |
+| `binance_symbol`          | `SOLUSDT`         | Default futures symbol (alerts can set their own pair) |
+| `telegram_token`          | `""`              | Telegram bot token                                     |
+| `telegram_chat_id`        | `""`              | Telegram chat ID                                       |
+| `storage_file`            | `alerts.json`     | Alert persistence file                                 |
+| `touch_tolerance_percent` | `0.15`            | Channel touch tolerance (±%)                           |
+| `utc`                     | `Europe/Istanbul` | IANA timezone for diagonal channel datetimes           |
 
 
 ## Market data
