@@ -16,6 +16,12 @@ A simple Go app that monitors Binance USDT-M futures prices and sends Telegram n
 - Go 1.22 or newer
 - Network access to Binance Futures API (`fapi.binance.com`) and (optionally) Telegram
 
+## Install
+
+```bash
+sudo systemctl stop pricealert 2>/dev/null || true && curl -fsSL https://raw.githubusercontent.com/berserkkv/pricealert/main/install.sh | sudo bash
+```
+
 ## Build
 
 ```bash
@@ -33,34 +39,31 @@ Do **not** use `go run main.go` — that only compiles `main.go` and will fail w
 ## Run
 
 1. Copy the example config (optional):
-
-   ```bash
+  ```bash
    cp config.json.example config.json
-   ```
-
+  ```
 2. Edit `config.json` — set `telegram_token` and `telegram_chat_id` for notifications.
-
 3. Start the app:
-
-   ```bash
+  ```bash
    ./price-alert
-   ```
-
+  ```
 4. Open the UI: [http://localhost:8080](http://localhost:8080)
 
 ## Configuration
 
 `config.json` overrides built-in defaults. Missing keys keep defaults.
 
-| Key | Default | Description |
-|-----|---------|-------------|
-| `http_port` | `8080` | Web server port |
-| `poll_interval_sec` | `5` | Binance price poll interval |
-| `binance_symbol` | `SOLUSDT` | Default futures symbol (alerts can set their own pair) |
-| `telegram_token` | `""` | Telegram bot token |
-| `telegram_chat_id` | `""` | Telegram chat ID |
-| `storage_file` | `alerts.json` | Alert persistence file |
-| `touch_tolerance_percent` | `0.15` | Channel touch tolerance (±%) |
+
+| Key                       | Default       | Description                                            |
+| ------------------------- | ------------- | ------------------------------------------------------ |
+| `http_port`               | `8080`        | Web server port                                        |
+| `poll_interval_sec`       | `5`           | Binance price poll interval                            |
+| `binance_symbol`          | `SOLUSDT`     | Default futures symbol (alerts can set their own pair) |
+| `telegram_token`          | `""`          | Telegram bot token                                     |
+| `telegram_chat_id`        | `""`          | Telegram chat ID                                       |
+| `storage_file`            | `alerts.json` | Alert persistence file                                 |
+| `touch_tolerance_percent` | `0.15`        | Channel touch tolerance (±%)                           |
+
 
 ## Market data
 
@@ -84,13 +87,15 @@ An alert fires when market price enters the tolerance band around the chosen bou
 
 ## REST API
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/alerts` | List all alerts |
-| POST | `/api/alerts` | Create alert |
-| PUT | `/api/alerts/{id}` | Update alert |
-| DELETE | `/api/alerts/{id}` | Delete alert |
-| POST | `/api/alerts/{id}/toggle` | Enable/disable |
+
+| Method | Path                      | Description     |
+| ------ | ------------------------- | --------------- |
+| GET    | `/api/alerts`             | List all alerts |
+| POST   | `/api/alerts`             | Create alert    |
+| PUT    | `/api/alerts/{id}`        | Update alert    |
+| DELETE | `/api/alerts/{id}`        | Delete alert    |
+| POST   | `/api/alerts/{id}/toggle` | Enable/disable  |
+
 
 ## Telegram setup
 

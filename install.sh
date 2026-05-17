@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# sudo systemctl stop notifier 2>/dev/null || true && curl -fsSL https://raw.githubusercontent.com/berserkkv/pricealert/main/install.sh | sudo bash
+# sudo systemctl stop pricealert 2>/dev/null || true && curl -fsSL https://raw.githubusercontent.com/berserkkv/pricealert/main/install.sh | sudo bash
 
 set -e
 
