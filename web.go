@@ -64,7 +64,22 @@ func (w *Web) handleIndex(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (w *Web) handleListAlerts(rw http.ResponseWriter, r *http.Request) {
-	writeJSON(rw, w.storage.All())
+	alerts := w.storage.All()
+	out := make([]AlertView, 0, len(alerts))
+	nowUnix := time.Now().Unix()
+
+	for _, a := range alerts {
+		v := AlertView{Alert: a}
+		if a.Type == AlertChannel {
+			v.P1DateTime = formatDateTimeInZone(w.loc, a.P1Time)
+			v.P2DateTime = formatDateTimeInZone(w.loc, a.P2Time)
+			upper, lower := ChannelBounds(a, nowUnix)
+			v.CurrentUpper = &upper
+			v.CurrentLower = &lower
+		}
+		out = append(out, v)
+	}
+	writeJSON(rw, out)
 }
 
 func (w *Web) handleCreateAlert(rw http.ResponseWriter, r *http.Request) {

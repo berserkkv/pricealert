@@ -26,7 +26,12 @@ func parseDateTimeInZone(loc *time.Location, s string) (int64, error) {
 		return 0, fmt.Errorf("empty datetime")
 	}
 
-	layouts := []string{"2006-01-02T15:04", "2006-01-02 15:04"}
+	layouts := []string{
+		"2006-01-02T15:04",
+		"2006-01-02 15:04",
+		"2006-01-02T15:04:05",
+		"2006-01-02 15:04:05",
+	}
 	var t time.Time
 	var err error
 	for _, layout := range layouts {

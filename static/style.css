@@ -108,6 +108,12 @@ td.empty {
   text-overflow: ellipsis;
 }
 
+td.bound {
+  font-family: ui-monospace, monospace;
+  font-size: 0.8rem;
+  color: var(--accent);
+}
+
 .badge {
   display: inline-block;
   padding: 0.12rem 0.45rem;

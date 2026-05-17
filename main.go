@@ -33,7 +33,7 @@ func main() {
 		log.Println("telegram: not configured (set telegram_token and telegram_chat_id in config.json)")
 	}
 
-	checker := NewChecker(cfg, storage, telegram, loc)
+	checker := NewChecker(cfg, storage, telegram)
 	stop := make(chan struct{})
 
 	go checker.Run(stop)

@@ -50,6 +50,15 @@ type Alert struct {
 	TriggerSide ChannelSide `json:"trigger_side,omitempty"`
 }
 
+// AlertView is returned by the API with computed channel fields.
+type AlertView struct {
+	Alert
+	P1DateTime   string   `json:"p1_datetime,omitempty"`
+	P2DateTime   string   `json:"p2_datetime,omitempty"`
+	CurrentUpper *float64 `json:"current_upper,omitempty"`
+	CurrentLower *float64 `json:"current_lower,omitempty"`
+}
+
 // AlertInput is used for create/update API requests.
 type AlertInput struct {
 	Pair        string              `json:"pair"`

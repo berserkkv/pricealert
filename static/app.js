@@ -44,21 +44,33 @@ function typeLabel(type) {
 
 function unixToDatetimeLocal(unix) {
   if (!unix) return '';
-  const d = new Date(unix * 1000);
-  const parts = Object.fromEntries(
-    new Intl.DateTimeFormat('en-GB', {
-      timeZone: appTimezone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    })
-      .formatToParts(d)
-      .map((p) => [p.type, p.value])
+  const s = new Date(unix * 1000)
+    .toLocaleString('sv-SE', { timeZone: appTimezone })
+    .replace(' ', 'T');
+  return s.slice(0, 16);
+}
+
+function fmtPrice(n) {
+  if (n == null || n === undefined) return '—';
+  return Number(n).toFixed(4);
+}
+
+function boundsCells(a) {
+  if (a.type !== 'channel') {
+    return '<td>—</td><td>—</td>';
+  }
+  return (
+    '<td class="bound">' + fmtPrice(a.current_upper) + '</td>' +
+    '<td class="bound">' + fmtPrice(a.current_lower) + '</td>'
   );
-  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+}
+
+function boundsCardRows(a) {
+  if (a.type !== 'channel') return '';
+  return (
+    '<div>Upper <span>' + fmtPrice(a.current_upper) + '</span></div>' +
+    '<div>Lower <span>' + fmtPrice(a.current_lower) + '</span></div>'
+  );
 }
 
 function switchTab(tab, scrollToForm) {
@@ -102,7 +114,7 @@ async function loadAlerts() {
   } catch (e) {
     const msg = escapeHtml(e.message);
     alertsBody.innerHTML =
-      '<tr><td colspan="7" class="empty">Error: ' + msg + '</td></tr>';
+      '<tr><td colspan="9" class="empty">Error: ' + msg + '</td></tr>';
     alertsCards.innerHTML = '<p class="empty">Error: ' + msg + '</p>';
   }
 }
@@ -136,7 +148,7 @@ function bindActions(container) {
 
 function renderAlerts(alerts) {
   if (!alerts.length) {
-    alertsBody.innerHTML = '<tr><td colspan="7" class="empty">No alerts yet</td></tr>';
+    alertsBody.innerHTML = '<tr><td colspan="9" class="empty">No alerts yet</td></tr>';
     alertsCards.innerHTML = '<p class="empty">No alerts yet</p>';
     return;
   }
@@ -153,6 +165,7 @@ function renderAlerts(alerts) {
           <td>${escapeHtml(a.pair)}</td>
           <td class="type-badge">${escapeHtml(typeLabel(a.type))}</td>
           <td>${enabled}</td>
+          ${boundsCells(a)}
           <td>${escapeHtml(fmtTime(a.created_at))}</td>
           <td>${escapeHtml(fmtTime(a.last_trigger))}</td>
           <td class="actions">${actionButtons(a)}</td>
@@ -173,6 +186,7 @@ function renderAlerts(alerts) {
           </div>
           <div class="alert-card-meta">
             <div>Type <span class="type-badge">${escapeHtml(typeLabel(a.type))}</span></div>
+            ${boundsCardRows(a)}
             <div>Label <span>${escapeHtml(a.label || '—')}</span></div>
             <div>Created <span>${escapeHtml(fmtTime(a.created_at))}</span></div>
             <div>Triggered <span>${escapeHtml(fmtTime(a.last_trigger))}</span></div>
@@ -205,9 +219,9 @@ async function editAlert(id) {
     const f = formChannel;
     f.edit_id.value = a.id;
     f.pair.value = a.pair;
-    f.p1_datetime.value = unixToDatetimeLocal(a.p1_time);
+    f.p1_datetime.value = a.p1_datetime || unixToDatetimeLocal(a.p1_time);
     f.p1_price.value = a.p1_price;
-    f.p2_datetime.value = unixToDatetimeLocal(a.p2_time);
+    f.p2_datetime.value = a.p2_datetime || unixToDatetimeLocal(a.p2_time);
     f.p2_price.value = a.p2_price;
     f.offset.value = a.offset;
     f.trigger_side.value = a.trigger_side;

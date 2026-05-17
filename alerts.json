@@ -1,0 +1,17 @@
+[
+  {
+    "id": "1779036932986778038",
+    "pair": "SOLUSDT",
+    "type": "channel",
+    "enabled": true,
+    "label": "Example",
+    "created_at": "2026-05-17T16:55:32.986783809Z",
+    "last_trigger": "2026-05-17T20:35:42.67297753+03:00",
+    "p1_time": 1779029700,
+    "p1_price": 86.42,
+    "p2_time": 1779051000,
+    "p2_price": 86.12,
+    "offset": -0.33,
+    "trigger_side": "both"
+  }
+]
