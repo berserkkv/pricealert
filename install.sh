@@ -4,15 +4,15 @@
 
 set -e
 
-APP_NAME="notifier"
+APP_NAME="pricealert"
 INSTALL_DIR="/usr/local/bin"
 
 BIN_PATH="$INSTALL_DIR/$APP_NAME"
 CONFIG_PATH="$INSTALL_DIR/config.json"
 SERVICE_FILE="/etc/systemd/system/$APP_NAME.service"
 
-BIN_URL="https://raw.githubusercontent.com/berserkkv/notifier/main/notifier"
-CONFIG_URL="https://raw.githubusercontent.com/berserkkv/notifier/main/config.json"
+BIN_URL="https://raw.githubusercontent.com/berserkkv/pricealert/main/pricealert"
+CONFIG_URL="https://raw.githubusercontent.com/berserkkv/pricealert/main/config.json"
 
 echo "Downloading binary..."
 curl -L "$BIN_URL" -o "$BIN_PATH"
