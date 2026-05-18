@@ -17,27 +17,44 @@ var embeddedFS embed.FS
 
 // Web serves the UI and REST API.
 type Web struct {
-	cfg     Config
+	cfg     *Config
+	cfgPath string
 	storage *Storage
 	loc     *time.Location
 }
 
 // NewWeb creates the HTTP server handler setup.
-func NewWeb(cfg Config, storage *Storage, loc *time.Location) *Web {
-	return &Web{cfg: cfg, storage: storage, loc: loc}
+func NewWeb(cfg *Config, cfgPath string, storage *Storage, loc *time.Location) *Web {
+	return &Web{cfg: cfg, cfgPath: cfgPath, storage: storage, loc: loc}
 }
 
 // Handler returns the root mux.
 func (w *Web) Handler() http.Handler {
 	mux := http.NewServeMux()
 
-	// API
-	mux.HandleFunc("GET /api/alerts", w.handleListAlerts)
-	mux.HandleFunc("POST /api/alerts", w.handleCreateAlert)
-	mux.HandleFunc("PUT /api/alerts/{id}", w.handleUpdateAlert)
-	mux.HandleFunc("DELETE /api/alerts/{id}", w.handleDeleteAlert)
-	mux.HandleFunc("POST /api/alerts/{id}/toggle", w.handleToggleAlert)
+	// Helper to require auth for protected endpoints
+	authWrap := func(h http.HandlerFunc) http.HandlerFunc {
+		return func(rw http.ResponseWriter, r *http.Request) {
+			if !w.isAuthorized(r) {
+				writeError(rw, "unauthorized", http.StatusUnauthorized)
+				return
+			}
+			h(rw, r)
+		}
+	}
+
+	// API (protected)
+	mux.HandleFunc("GET /api/alerts", authWrap(w.handleListAlerts))
+	mux.HandleFunc("POST /api/alerts", authWrap(w.handleCreateAlert))
+	mux.HandleFunc("PUT /api/alerts/{id}", authWrap(w.handleUpdateAlert))
+	mux.HandleFunc("DELETE /api/alerts/{id}", authWrap(w.handleDeleteAlert))
+	mux.HandleFunc("POST /api/alerts/{id}/toggle", authWrap(w.handleToggleAlert))
+
+	// Config and auth endpoints (login & settings)
 	mux.HandleFunc("GET /api/config", w.handleConfig)
+	mux.HandleFunc("POST /api/login", w.handleLogin)
+	mux.HandleFunc("GET /api/settings", authWrap(w.handleGetSettings))
+	mux.HandleFunc("PUT /api/settings", authWrap(w.handleUpdateSettings))
 
 	// Static files from embed
 	staticSub, _ := fs.Sub(embeddedFS, "static")
@@ -155,6 +172,108 @@ func (w *Web) handleConfig(rw http.ResponseWriter, r *http.Request) {
 	writeJSON(rw, map[string]string{"utc": tz})
 }
 
+// isAuthorized checks for Bearer token or X-Auth-Token header matching stored access token.
+func (w *Web) isAuthorized(r *http.Request) bool {
+	if w.cfg == nil || w.cfg.AccessToken == "" {
+		// no token configured -> no auth required
+		return true
+	}
+	// Check Authorization header
+	auth := r.Header.Get("Authorization")
+	if strings.HasPrefix(auth, "Bearer ") {
+		tok := strings.TrimPrefix(auth, "Bearer ")
+		return tok == w.cfg.AccessToken
+	}
+	// Fallback header
+	if r.Header.Get("X-Auth-Token") == w.cfg.AccessToken {
+		return true
+	}
+	return false
+}
+
+// handleLogin allows the first-time client to set an access token, or validate an existing one.
+func (w *Web) handleLogin(rw http.ResponseWriter, r *http.Request) {
+	var in struct {
+		Secret string `json:"secret"`
+	}
+	dec := json.NewDecoder(r.Body)
+	if err := dec.Decode(&in); err != nil {
+		writeError(rw, "invalid request", http.StatusBadRequest)
+		return
+	}
+	if in.Secret == "" {
+		writeError(rw, "secret required", http.StatusBadRequest)
+		return
+	}
+
+	// If no access token configured yet, set this secret as the token and persist config
+	if w.cfg.AccessToken == "" {
+		w.cfg.AccessToken = in.Secret
+		if err := SaveConfig(w.cfgPath, *w.cfg); err != nil {
+			writeError(rw, "failed to save config", http.StatusInternalServerError)
+			return
+		}
+		writeJSON(rw, map[string]string{"token": in.Secret})
+		return
+	}
+
+	// Otherwise validate
+	if in.Secret != w.cfg.AccessToken {
+		writeError(rw, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	writeJSON(rw, map[string]string{"token": in.Secret})
+}
+
+// handleGetSettings returns editable settings.
+func (w *Web) handleGetSettings(rw http.ResponseWriter, r *http.Request) {
+	out := map[string]any{
+		"utc":                     w.cfg.UTC,
+		"telegram_token":          w.cfg.TelegramToken,
+		"telegram_chat_id":        w.cfg.TelegramChatID,
+		"touch_tolerance_percent": w.cfg.TouchTolerancePercent,
+		"poll_interval_sec":       w.cfg.PollIntervalSec,
+	}
+	writeJSON(rw, out)
+}
+
+// handleUpdateSettings updates selected config fields and persists them.
+func (w *Web) handleUpdateSettings(rw http.ResponseWriter, r *http.Request) {
+	var in struct {
+		UTC                   *string  `json:"utc"`
+		TelegramToken         *string  `json:"telegram_token"`
+		TelegramChatID        *string  `json:"telegram_chat_id"`
+		TouchTolerancePercent *float64 `json:"touch_tolerance_percent"`
+		PollIntervalSec       *int     `json:"poll_interval_sec"`
+	}
+	dec := json.NewDecoder(r.Body)
+	if err := dec.Decode(&in); err != nil {
+		writeError(rw, "invalid request", http.StatusBadRequest)
+		return
+	}
+	if in.UTC != nil {
+		w.cfg.UTC = *in.UTC
+	}
+	if in.TelegramToken != nil {
+		w.cfg.TelegramToken = *in.TelegramToken
+	}
+	if in.TelegramChatID != nil {
+		w.cfg.TelegramChatID = *in.TelegramChatID
+	}
+	if in.TouchTolerancePercent != nil {
+		w.cfg.TouchTolerancePercent = *in.TouchTolerancePercent
+	}
+	if in.PollIntervalSec != nil {
+		w.cfg.PollIntervalSec = *in.PollIntervalSec
+	}
+
+	if err := SaveConfig(w.cfgPath, *w.cfg); err != nil {
+		writeError(rw, "failed to save config", http.StatusInternalServerError)
+		return
+	}
+	writeJSON(rw, map[string]string{"status": "ok"})
+}
+
 func (w *Web) handleToggleAlert(rw http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	alert, err := w.storage.ToggleEnabled(id)
@@ -248,8 +367,8 @@ func writeError(rw http.ResponseWriter, msg string, code int) {
 }
 
 // StartHTTPServer runs the web server.
-func StartHTTPServer(cfg Config, storage *Storage, loc *time.Location) *http.Server {
-	web := NewWeb(cfg, storage, loc)
+func StartHTTPServer(cfg *Config, cfgPath string, storage *Storage, loc *time.Location) *http.Server {
+	web := NewWeb(cfg, cfgPath, storage, loc)
 	addr := fmt.Sprintf(":%d", cfg.HTTPPort)
 	srv := &http.Server{
 		Addr:    addr,

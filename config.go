@@ -15,6 +15,7 @@ type Config struct {
 	StorageFile           string  `json:"storage_file"`
 	TouchTolerancePercent float64 `json:"touch_tolerance_percent"`
 	UTC                   string  `json:"utc"` // IANA timezone for channel datetimes, e.g. Europe/Istanbul
+	AccessToken           string  `json:"access_token,omitempty"`
 }
 
 // defaultConfig returns built-in defaults.
@@ -74,5 +75,18 @@ func LoadConfig(path string) (Config, error) {
 		cfg.UTC = fileCfg.UTC
 	}
 
+	if fileCfg.AccessToken != "" {
+		cfg.AccessToken = fileCfg.AccessToken
+	}
+
 	return cfg, nil
+}
+
+// SaveConfig writes the provided config to the given path as JSON.
+func SaveConfig(path string, cfg Config) error {
+	data, err := json.MarshalIndent(cfg, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(path, data, 0644)
 }

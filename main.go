@@ -38,7 +38,7 @@ func main() {
 
 	go checker.Run(stop)
 
-	srv := StartHTTPServer(cfg, storage, loc)
+	srv := StartHTTPServer(&cfg, "config.json", storage, loc)
 
 	// Graceful shutdown on Ctrl+C
 	sig := make(chan os.Signal, 1)

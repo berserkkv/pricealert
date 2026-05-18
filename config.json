@@ -6,5 +6,6 @@
   "telegram_chat_id": "7217926764",
   "storage_file": "alerts.json",
   "touch_tolerance_percent": 0.15,
-  "utc": "Europe/Istanbul"
+  "utc": "Europe/Istanbul",
+  "access_token": "ber"
 }

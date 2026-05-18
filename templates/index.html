@@ -85,9 +85,9 @@
           </label>
           <label>Trigger side
             <select name="trigger_side" required>
+              <option value="both">Both</option>
               <option value="upper">Upper</option>
               <option value="lower">Lower</option>
-              <option value="both">Both</option>
             </select>
           </label>
           <label>Label <input name="label" placeholder="Optional"></label>
@@ -123,6 +123,32 @@
       </div>
       <div id="alerts-cards" class="alerts-cards" aria-label="Alerts list"></div>
     </section>
+
+    <section class="card">
+      <h2>Settings</h2>
+      <form id="form-settings">
+        <label>Timezone (IANA) <input name="utc" placeholder="Europe/Istanbul"></label>
+        <label>Telegram token <input name="telegram_token" placeholder="bot token"></label>
+        <label>Telegram chat id <input name="telegram_chat_id" placeholder="chat id"></label>
+        <label>Touch tolerance % <input name="touch_tolerance_percent" type="number" step="any"></label>
+        <label>Poll interval (sec) <input name="poll_interval_sec" type="number" step="1"></label>
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">Save Settings</button>
+        </div>
+      </form>
+    </section>
+
+    <div id="login-panel" class="overlay" hidden>
+      <div class="overlay-inner">
+        <h3>Login</h3>
+        <form id="form-login">
+          <label>Secret <input name="secret" placeholder="Choose a secret or enter existing" required></label>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Login</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </main>
 
   <script src="/static/app.js"></script>

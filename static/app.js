@@ -97,14 +97,51 @@ tabButtons.forEach((btn) => {
 });
 
 async function api(path, options = {}) {
+  const token = localStorage.getItem('notifier_token');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
   const res = await fetch(path, {
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     ...options,
   });
   if (res.status === 204) return null;
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || res.statusText);
   return data;
+}
+
+// Login flow
+const loginPanel = document.getElementById('login-panel');
+const formLogin = document.getElementById('form-login');
+
+function showLogin() {
+  if (loginPanel) loginPanel.hidden = false;
+}
+function hideLogin() {
+  if (loginPanel) loginPanel.hidden = true;
+}
+
+if (formLogin) {
+  formLogin.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const secret = formLogin.secret.value.trim();
+    if (!secret) return;
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'login failed');
+      localStorage.setItem('notifier_token', data.token);
+      hideLogin();
+      await loadAppConfig();
+      loadAlerts();
+    } catch (err) {
+      alert('Login failed: ' + err.message);
+    }
+  });
 }
 
 async function loadAlerts() {
@@ -311,7 +348,50 @@ document.querySelectorAll('[data-cancel]').forEach((btn) => {
 });
 
 (async function init() {
-  await loadAppConfig();
+  // If no token present, show login overlay; otherwise proceed.
+  const token = localStorage.getItem('notifier_token');
+  if (!token) {
+    showLogin();
+    return;
+  }
+  try {
+    await loadAppConfig();
+  } catch (_) {}
   loadAlerts();
   setInterval(loadAlerts, 10000);
-})();
+
+  // Load settings into form
+  try {
+    const s = await api('/api/settings');
+    const f = document.getElementById('form-settings');
+    if (f && s) {
+      f.utc.value = s.utc || '';
+      f.telegram_token.value = s.telegram_token || '';
+      f.telegram_chat_id.value = s.telegram_chat_id || '';
+      f.touch_tolerance_percent.value = s.touch_tolerance_percent || '';
+      f.poll_interval_sec.value = s.poll_interval_sec || '';
+    }
+  } catch (_) {}
+
+  const settingsForm = document.getElementById('form-settings');
+  if (settingsForm) {
+    settingsForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const f = settingsForm;
+      const body = {
+        utc: f.utc.value.trim(),
+        telegram_token: f.telegram_token.value.trim(),
+        telegram_chat_id: f.telegram_chat_id.value.trim(),
+        touch_tolerance_percent: parseFloat(f.touch_tolerance_percent.value) || undefined,
+        poll_interval_sec: parseInt(f.poll_interval_sec.value) || undefined,
+      };
+      try {
+        await api('/api/settings', { method: 'PUT', body: JSON.stringify(body) });
+        alert('Settings saved');
+        await loadAppConfig();
+      } catch (err) {
+        alert('Failed to save: ' + err.message);
+      }
+    });
+  }
+}());

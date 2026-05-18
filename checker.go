@@ -21,9 +21,9 @@ type Checker struct {
 // NewChecker creates the price monitor.
 func NewChecker(cfg Config, storage *Storage, telegram *Telegram) *Checker {
 	return &Checker{
-		cfg:        cfg,
-		storage:    storage,
-		telegram:   telegram,
+		cfg:         cfg,
+		storage:     storage,
+		telegram:    telegram,
 		lastPrices:  make(map[string]float64),
 		wasTouching: make(map[string]bool),
 	}
@@ -114,6 +114,13 @@ func (c *Checker) checkHorizontal(alert Alert, price float64) {
 		return
 	}
 
+	// Respect 1 hour cooldown after a trigger
+	if !alert.LastTrigger.IsZero() {
+		if time.Since(alert.LastTrigger) < time.Hour {
+			return
+		}
+	}
+
 	detail := FormatHorizontalDetail(alert.Condition)
 	if err := c.telegram.SendAlert(alert, detail, price); err != nil {
 		log.Printf("telegram: %v", err)
@@ -165,6 +172,13 @@ func (c *Checker) checkChannel(alert Alert, price float64) {
 
 	if !triggered {
 		return
+	}
+
+	// Respect 1 hour cooldown after a trigger
+	if !alert.LastTrigger.IsZero() {
+		if time.Since(alert.LastTrigger) < time.Hour {
+			return
+		}
 	}
 
 	detail := FormatTouchDetail(touched)
