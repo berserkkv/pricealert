@@ -8,6 +8,9 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -55,6 +58,7 @@ func (w *Web) Handler() http.Handler {
 	mux.HandleFunc("POST /api/login", w.handleLogin)
 	mux.HandleFunc("GET /api/settings", authWrap(w.handleGetSettings))
 	mux.HandleFunc("PUT /api/settings", authWrap(w.handleUpdateSettings))
+	mux.HandleFunc("POST /api/update", authWrap(w.handleUpdateApp))
 
 	// Static files from embed
 	staticSub, _ := fs.Sub(embeddedFS, "static")
@@ -272,6 +276,69 @@ func (w *Web) handleUpdateSettings(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(rw, map[string]string{"status": "ok"})
+}
+
+func (w *Web) handleUpdateApp(rw http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeError(rw, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	if err := w.runSelfUpdate(); err != nil {
+		writeError(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	writeJSON(rw, map[string]string{"status": "ok", "message": "updated successfully"})
+}
+
+func (w *Web) runSelfUpdate() error {
+	binPath, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("unable to determine executable path: %w", err)
+	}
+	binPath, err = filepath.EvalSymlinks(binPath)
+	if err != nil {
+		return fmt.Errorf("unable to resolve executable path: %w", err)
+	}
+
+	resp, err := http.Get("https://raw.githubusercontent.com/berserkkv/pricealert/main/pricealert")
+	if err != nil {
+		return fmt.Errorf("download failed: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("download failed: %s", resp.Status)
+	}
+
+	tmpFile, err := os.CreateTemp(filepath.Dir(binPath), "pricealert-update-*")
+	if err != nil {
+		return fmt.Errorf("unable to create temp file: %w", err)
+	}
+	tmpPath := tmpFile.Name()
+	defer func() {
+		_ = tmpFile.Close()
+		_ = os.Remove(tmpPath)
+	}()
+
+	if _, err := io.Copy(tmpFile, resp.Body); err != nil {
+		return fmt.Errorf("failed to write update binary: %w", err)
+	}
+	if err := tmpFile.Chmod(0o755); err != nil {
+		return fmt.Errorf("failed to set executable permission: %w", err)
+	}
+	if err := tmpFile.Close(); err != nil {
+		return fmt.Errorf("failed to close temp file: %w", err)
+	}
+
+	if err := os.Rename(tmpPath, binPath); err != nil {
+		return fmt.Errorf("failed to replace binary: %w", err)
+	}
+
+	output, err := exec.Command("systemctl", "restart", "pricealert").CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("failed to restart service: %v: %s", err, strings.TrimSpace(string(output)))
+	}
+
+	return nil
 }
 
 func (w *Web) handleToggleAlert(rw http.ResponseWriter, r *http.Request) {

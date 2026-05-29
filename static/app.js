@@ -12,6 +12,8 @@ const addAlertToggle = document.getElementById('toggle-add-alert');
 const addAlertBody = document.querySelector('.card-form-body');
 const settingsToggle = document.getElementById('toggle-settings');
 const settingsBody = document.querySelector('.card-settings-body');
+const updateButton = document.getElementById('btn-update-app');
+const updateStatus = document.getElementById('update-status');
 
 let appTimezone = 'Europe/Istanbul';
 
@@ -142,6 +144,38 @@ async function api(path, options = {}) {
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || res.statusText);
   return data;
+}
+
+async function updateApp() {
+  if (!updateButton) return;
+  if (!confirm('Update pricealert to the latest version?')) return;
+
+  updateButton.disabled = true;
+  const originalText = updateButton.textContent;
+  updateButton.textContent = 'Updating…';
+  if (updateStatus) {
+    updateStatus.textContent = '';
+  }
+
+  try {
+    const result = await api('/api/update', { method: 'POST' });
+    if (updateStatus) {
+      updateStatus.textContent = result.message || 'Update completed successfully.';
+    }
+  } catch (err) {
+    if (updateStatus) {
+      updateStatus.textContent = 'Update failed: ' + err.message;
+    } else {
+      alert('Update failed: ' + err.message);
+    }
+  } finally {
+    updateButton.disabled = false;
+    updateButton.textContent = originalText;
+  }
+}
+
+if (updateButton) {
+  updateButton.addEventListener('click', updateApp);
 }
 
 // Login flow
