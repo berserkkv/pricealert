@@ -57,6 +57,7 @@ type AlertView struct {
 	P2DateTime   string   `json:"p2_datetime,omitempty"`
 	CurrentUpper *float64 `json:"current_upper,omitempty"`
 	CurrentLower *float64 `json:"current_lower,omitempty"`
+	CurrentPrice *float64 `json:"current_price,omitempty"`
 }
 
 // AlertInput is used for create/update API requests.

@@ -15,7 +15,12 @@ const settingsBody = document.querySelector('.card-settings-body');
 const updateButton = document.getElementById('btn-update-app');
 const updateStatus = document.getElementById('update-status');
 
+const addIcon = '<span class="material-symbols-outlined" aria-hidden="true">add</span>';
+const settingsIcon = '<span class="material-symbols-outlined" aria-hidden="true">settings</span>';
+const closeIcon = '<span class="material-symbols-outlined" aria-hidden="true">close</span>';
+
 let appTimezone = 'Europe/Istanbul';
+let appTouchTolerancePercent = 0.15;
 
 async function loadAppConfig() {
   try {
@@ -61,37 +66,64 @@ function fmtPrice(n) {
   return Number(n).toFixed(4);
 }
 
+function fmtPercent(n) {
+  if (n == null || n === undefined) return '';
+  return Number(n).toFixed(2) + '%';
+}
+
+function boundPercent(bound, currentPrice) {
+  if (bound == null || currentPrice == null) return null;
+  if (bound === 0) return null;
+  return (Math.abs(currentPrice - bound) / Math.abs(bound)) * 100;
+}
+
+function boundCellHtml(bound, currentPrice) {
+  const percent = boundPercent(bound, currentPrice);
+  const near = percent != null && appTouchTolerancePercent != null && percent <= appTouchTolerancePercent;
+  return (
+    '<td class="bound' + (near ? ' near' : '') + '">' +
+    fmtPrice(bound) +
+    (percent != null ? ' <span class="bound-percent">(' + fmtPercent(percent) + ')</span>' : '') +
+    '</td>'
+  );
+}
+
+function boundCardHtml(label, bound, currentPrice) {
+  const percent = boundPercent(bound, currentPrice);
+  const near = percent != null && appTouchTolerancePercent != null && percent <= appTouchTolerancePercent;
+  return (
+    '<div>' + label + ' <span class="bound' + (near ? ' near' : '') + '">' +
+    fmtPrice(bound) +
+    (percent != null ? ' <span class="bound-percent">(' + fmtPercent(percent) + ')</span>' : '') +
+    '</span></div>'
+  );
+}
+
 function boundsCells(a) {
   if (a.type !== 'channel') {
     return '<td>—</td><td>—</td>';
   }
-  return (
-    '<td class="bound">' + fmtPrice(a.current_upper) + '</td>' +
-    '<td class="bound">' + fmtPrice(a.current_lower) + '</td>'
-  );
+  return boundCellHtml(a.current_lower, a.current_price) + boundCellHtml(a.current_upper, a.current_price);
 }
 
 function boundsCardRows(a) {
   if (a.type !== 'channel') return '';
-  return (
-    '<div>Lower <span>' + fmtPrice(a.current_lower) + '</span></div>' +
-    '<div>Upper <span>' + fmtPrice(a.current_upper) + '</span></div>'
-  );
+  return boundCardHtml('Lower', a.current_lower, a.current_price) + boundCardHtml('Upper', a.current_upper, a.current_price);
 }
 
 function setSectionOpen(open, body, toggle, { openLabel = 'Show', closeLabel = 'Hide' } = {}) {
   if (!body || !toggle) return;
   body.hidden = !open;
-  toggle.textContent = open ? closeLabel : openLabel;
+  toggle.innerHTML = open ? closeLabel : openLabel;
   toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
 }
 
 function setAddAlertOpen(open) {
-  setSectionOpen(open, addAlertBody, addAlertToggle, { openLabel: '➕', closeLabel: '✕' });
+  setSectionOpen(open, addAlertBody, addAlertToggle, { openLabel: addIcon, closeLabel: closeIcon });
 }
 
 function setSettingsOpen(open) {
-  setSectionOpen(open, settingsBody, settingsToggle, { openLabel: '⚙️', closeLabel: '✕' });
+  setSectionOpen(open, settingsBody, settingsToggle, { openLabel: settingsIcon, closeLabel: closeIcon });
 }
 
 function switchTab(tab, scrollToForm) {
@@ -230,14 +262,28 @@ function escapeHtml(s) {
   return div.innerHTML;
 }
 
+
+
+
+
+
+
+
+
+
 function actionButtons(a) {
   return `
-    <button class="btn-small" data-edit="${escapeHtml(a.id)}">Edit</button>
-    <button class="btn-small btn-secondary" data-toggle="${escapeHtml(a.id)}">
-      ${a.enabled ? 'Off' : 'On'}
+    <button class=" btn-none" data-edit="${escapeHtml(a.id)}" aria-label="Edit alert">
+      <span class="material-symbols-outlined">edit</span>
     </button>
-    <button class="btn-small btn-danger" data-delete="${escapeHtml(a.id)}">Del</button>`;
+    <button class=" btn-none" data-delete="${escapeHtml(a.id)}" aria-label="Delete alert">
+      <span class="material-symbols-outlined">delete</span>
+    </button>`;
 }
+
+
+
+
 
 function bindActions(container) {
   container.querySelectorAll('[data-edit]').forEach((btn) => {
@@ -251,7 +297,30 @@ function bindActions(container) {
   });
 }
 
+function alertCloseness(a) {
+  if (a.type !== 'channel' || a.current_price == null || a.current_lower == null || a.current_upper == null) {
+    return Infinity;
+  }
+  const lowerPct = boundPercent(a.current_lower, a.current_price);
+  const upperPct = boundPercent(a.current_upper, a.current_price);
+  return Math.min(lowerPct || Infinity, upperPct || Infinity);
+}
+
+function sortAlerts(alerts) {
+  return alerts.slice().sort((a, b) => {
+    const aClose = alertCloseness(a);
+    const bClose = alertCloseness(b);
+    if (aClose !== bClose) {
+      return aClose - bClose;
+    }
+    const aDate = new Date(a.created_at).getTime();
+    const bDate = new Date(b.created_at).getTime();
+    return bDate - aDate;
+  });
+}
+
 function renderAlerts(alerts) {
+  alerts = sortAlerts(alerts);
   if (!alerts.length) {
     alertsBody.innerHTML = '<tr><td colspan="9" class="empty">No alerts yet</td></tr>';
     alertsCards.innerHTML = '<p class="empty">No alerts yet</p>';
@@ -286,17 +355,25 @@ function renderAlerts(alerts) {
       return `
         <article class="alert-card" data-id="${escapeHtml(a.id)}">
           <div class="alert-card-header">
-            <strong>${escapeHtml(a.pair)}</strong> 
-            
-            ${enabled}
-          </div>
+            <strong>${escapeHtml(a.pair)} <span class="secondary">${escapeHtml(a.label)}</span></strong>
+           
+           <div>
+             <button class=" btn-none" data-edit="${escapeHtml(a.id)}" aria-label="Edit alert">
+      <span class="material-symbols-outlined">edit</span>
+    </button>
+    <button class="btn-none" data-delete="${escapeHtml(a.id)}" aria-label="Delete alert">
+      <span class="material-symbols-outlined">delete</span>
+    </button>
+            <button class="btn-none" data-toggle="${escapeHtml(a.id)}" aria-label="${a.enabled ? 'Disable' : 'Enable'} alert"> ${enabled}</button>
+         
+         </div>   </div>
           <div class="alert-card-meta">
             <!--<div>Type <span class="type-badge">${escapeHtml(typeLabel(a.type))}</span></div>-->
             ${boundsCardRows(a)}
             <div>Created <span>${escapeHtml(fmtTime(a.created_at))}</span></div>
             <div>Triggered <span>${escapeHtml(fmtTime(a.last_trigger))}</span></div>
           </div>
-          <div class="actions">${actionButtons(a)}</div>
+          
         </article>`;
     })
     .join('');
@@ -440,6 +517,9 @@ document.querySelectorAll('[data-cancel]').forEach((btn) => {
       f.telegram_chat_id.value = s.telegram_chat_id || '';
       f.touch_tolerance_percent.value = s.touch_tolerance_percent || '';
       f.poll_interval_sec.value = s.poll_interval_sec || '';
+      if (s.touch_tolerance_percent != null) {
+        appTouchTolerancePercent = parseFloat(s.touch_tolerance_percent) || appTouchTolerancePercent;
+      }
     }
   } catch (_) {}
 
@@ -457,6 +537,10 @@ document.querySelectorAll('[data-cancel]').forEach((btn) => {
       };
       try {
         await api('/api/settings', { method: 'PUT', body: JSON.stringify(body) });
+        const savedTolerance = parseFloat(body.touch_tolerance_percent);
+        if (!Number.isNaN(savedTolerance)) {
+          appTouchTolerancePercent = savedTolerance;
+        }
         alert('Settings saved');
         await loadAppConfig();
       } catch (err) {

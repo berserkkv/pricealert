@@ -3,7 +3,7 @@
     "id": "1779036932986778038",
     "pair": "SOLUSDT",
     "type": "channel",
-    "enabled": false,
+    "enabled": true,
     "label": "Example",
     "created_at": "2026-05-17T16:55:32.986783809Z",
     "last_trigger": "2026-05-18T22:33:27.910566201+03:00",
@@ -12,6 +12,21 @@
     "p2_time": 1779051000,
     "p2_price": 86.12,
     "offset": -0.33,
+    "trigger_side": "both"
+  },
+  {
+    "id": "1780050438607936374",
+    "pair": "SOLUSDT",
+    "type": "channel",
+    "enabled": false,
+    "label": "channel",
+    "created_at": "2026-05-29T13:27:18.607941093+03:00",
+    "last_trigger": "2026-05-29T13:30:16.284204654+03:00",
+    "p1_time": 1779359160,
+    "p1_price": 90,
+    "p2_time": 1780053960,
+    "p2_price": 82,
+    "offset": 3,
     "trigger_side": "both"
   }
 ]

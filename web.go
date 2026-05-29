@@ -88,6 +88,7 @@ func (w *Web) handleListAlerts(rw http.ResponseWriter, r *http.Request) {
 	alerts := w.storage.All()
 	out := make([]AlertView, 0, len(alerts))
 	nowUnix := time.Now().Unix()
+	prices := make(map[string]float64)
 
 	for _, a := range alerts {
 		v := AlertView{Alert: a}
@@ -97,6 +98,17 @@ func (w *Web) handleListAlerts(rw http.ResponseWriter, r *http.Request) {
 			upper, lower := ChannelBounds(a, nowUnix)
 			v.CurrentUpper = &upper
 			v.CurrentLower = &lower
+
+			if _, ok := prices[a.Pair]; !ok {
+				if price, err := FetchFuturesPrice(a.Pair); err == nil {
+					prices[a.Pair] = price
+				} else {
+					log.Printf("failed to fetch price for %s: %v", a.Pair, err)
+				}
+			}
+			if price, ok := prices[a.Pair]; ok {
+				v.CurrentPrice = &price
+			}
 		}
 		out = append(out, v)
 	}
