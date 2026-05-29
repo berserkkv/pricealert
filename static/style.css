@@ -194,7 +194,7 @@ span.bound.near {
   justify-content: space-between;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.0rem;
   margin-top: -10px;
 }
 
@@ -205,10 +205,10 @@ span.bound.near {
 .alert-card-meta {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.35rem 0.0rem;
+  gap: 0.25rem 0.0rem 0.0rem;
   font-size: 0.8rem;
   color: var(--muted);
-  margin-bottom: 0.65rem;
+  margin-bottom: 0.0rem;
 }
 .secondary {
   gap: 0.35rem 0.75rem;
@@ -237,7 +237,22 @@ span.bound.near {
   min-height: 40px;
 }
 
+.alert-card {
+  cursor: pointer;
+}
 
+.alert-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.alert-card .toggle-details {
+  display: none;
+}
+
+.alert-card.expanded .toggle-details {
+  display: block;
+}
 
 .alerts-cards .empty {
   text-align: center;

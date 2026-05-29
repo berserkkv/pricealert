@@ -285,6 +285,12 @@ function actionButtons(a) {
 
 
 
+function toggleCardDetails(card) {
+  if (!card) return;
+  const expanded = card.classList.toggle('expanded');
+  card.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+}
+
 function bindActions(container) {
   container.querySelectorAll('[data-edit]').forEach((btn) => {
     btn.addEventListener('click', () => editAlert(btn.dataset.edit));
@@ -294,6 +300,18 @@ function bindActions(container) {
   });
   container.querySelectorAll('[data-delete]').forEach((btn) => {
     btn.addEventListener('click', () => deleteAlert(btn.dataset.delete));
+  });
+  container.querySelectorAll('.alert-card').forEach((card) => {
+    card.addEventListener('keydown', (event) => {
+      if (event.code === 'Space' || event.key === ' ' || event.key === 'Spacebar') {
+        event.preventDefault();
+        toggleCardDetails(card);
+      }
+    });
+    card.addEventListener('click', (event) => {
+      if (event.target.closest('button, [data-edit], [data-delete], [data-toggle]')) return;
+      toggleCardDetails(card);
+    });
   });
 }
 
@@ -353,27 +371,25 @@ function renderAlerts(alerts) {
         ? '<span class="badge on">On</span>'
         : '<span class="badge off">Off</span>';
       return `
-        <article class="alert-card" data-id="${escapeHtml(a.id)}">
+        <article class="alert-card" data-id="${escapeHtml(a.id)}" tabindex="0" role="button" aria-expanded="false">
           <div class="alert-card-header">
             <strong>${escapeHtml(a.pair)} <span class="secondary">${escapeHtml(a.label)}</span></strong>
-           
-           <div>
-             <button class=" btn-none" data-edit="${escapeHtml(a.id)}" aria-label="Edit alert">
-      <span class="material-symbols-outlined">edit</span>
-    </button>
-    <button class="btn-none" data-delete="${escapeHtml(a.id)}" aria-label="Delete alert">
-      <span class="material-symbols-outlined">delete</span>
-    </button>
-            <button class="btn-none" data-toggle="${escapeHtml(a.id)}" aria-label="${a.enabled ? 'Disable' : 'Enable'} alert"> ${enabled}</button>
-         
-         </div>   </div>
+            <div>
+              <button class="btn-none" data-edit="${escapeHtml(a.id)}" aria-label="Edit alert">
+                <span class="material-symbols-outlined">edit</span>
+              </button>
+              <button class="btn-none" data-delete="${escapeHtml(a.id)}" aria-label="Delete alert">
+                <span class="material-symbols-outlined">delete</span>
+              </button>
+              <button class="btn-none" data-toggle="${escapeHtml(a.id)}" aria-label="${a.enabled ? 'Disable' : 'Enable'} alert">${enabled}</button>
+            </div>
+          </div>
           <div class="alert-card-meta">
             <!--<div>Type <span class="type-badge">${escapeHtml(typeLabel(a.type))}</span></div>-->
             ${boundsCardRows(a)}
-            <div>Created <span>${escapeHtml(fmtTime(a.created_at))}</span></div>
-            <div>Triggered <span>${escapeHtml(fmtTime(a.last_trigger))}</span></div>
+            <div class="toggle-details">Created <span>${escapeHtml(fmtTime(a.created_at))}</span></div>
+            <div class="toggle-details">Triggered <span>${escapeHtml(fmtTime(a.last_trigger))}</span></div>
           </div>
-          
         </article>`;
     })
     .join('');
