@@ -218,6 +218,11 @@ span.bound.near {
   background: var(--bg);
 }
 
+.alert-card.alert-card-horizontal {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
 .alert-card-header {
   display: flex;
   justify-content: space-between;

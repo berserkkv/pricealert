@@ -118,6 +118,16 @@ function boundCardHtml(label, bound, currentPrice) {
 }
 
 function boundsCells(a) {
+  if (a.type === 'horizontal') {
+    const percent = a.current_price != null ? boundPercent(a.target_price, a.current_price) : null;
+    const near = percent != null && appTouchTolerancePercent != null && percent <= appTouchTolerancePercent;
+    return (
+      '<td class="bound' + (near ? ' near' : '') + '">' +
+      fmtPrice(a.target_price) +
+      (percent != null ? ' <span class="bound-percent">(' + fmtPercent(percent) + ')</span>' : '') +
+      '</td><td>' + escapeHtml(a.condition) + '</td>'
+    );
+  }
   if (a.type !== 'channel') {
     return '<td>—</td><td>—</td>';
   }
@@ -125,6 +135,16 @@ function boundsCells(a) {
 }
 
 function boundsCardRows(a) {
+  if (a.type === 'horizontal') {
+    const percent = a.current_price != null ? boundPercent(a.target_price, a.current_price) : null;
+    const near = percent != null && appTouchTolerancePercent != null && percent <= appTouchTolerancePercent;
+    return (
+      '<div>Target <span class="bound' + (near ? ' near' : '') + '">' +
+      fmtPrice(a.target_price) +
+      (percent != null ? ' <span class="bound-percent">(' + fmtPercent(percent) + ')</span>' : '') +
+      '</span></div><div>Condition <span>' + escapeHtml(a.condition) + '</span></div>'
+    );
+  }
   if (a.type !== 'channel') return '';
   return boundCardHtml('Lower', a.current_lower, a.current_price) + boundCardHtml('Upper', a.current_upper, a.current_price);
 }
@@ -392,7 +412,7 @@ function renderAlerts(alerts) {
         ? '<span class="badge on">On</span>'
         : '<span class="badge off">Off</span>';
       return `
-        <article class="alert-card" data-id="${escapeHtml(a.id)}" tabindex="0" role="button" aria-expanded="false">
+        <article class="alert-card alert-card-${escapeHtml(a.type)}" data-id="${escapeHtml(a.id)}" tabindex="0" role="button" aria-expanded="false">
           <div class="alert-card-header">
             <strong>${escapeHtml(a.pair)} <span class="secondary">${escapeHtml(a.label)}</span></strong>
             <div>

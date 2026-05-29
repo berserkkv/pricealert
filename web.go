@@ -92,23 +92,25 @@ func (w *Web) handleListAlerts(rw http.ResponseWriter, r *http.Request) {
 
 	for _, a := range alerts {
 		v := AlertView{Alert: a}
+		
+		// Fetch current price for both channel and horizontal alerts
+		if _, ok := prices[a.Pair]; !ok {
+			if price, err := FetchFuturesPrice(a.Pair); err == nil {
+				prices[a.Pair] = price
+			} else {
+				log.Printf("failed to fetch price for %s: %v", a.Pair, err)
+			}
+		}
+		if price, ok := prices[a.Pair]; ok {
+			v.CurrentPrice = &price
+		}
+		
 		if a.Type == AlertChannel {
 			v.P1DateTime = formatDateTimeInZone(w.loc, a.P1Time)
 			v.P2DateTime = formatDateTimeInZone(w.loc, a.P2Time)
 			upper, lower := ChannelBounds(a, nowUnix)
 			v.CurrentUpper = &upper
 			v.CurrentLower = &lower
-
-			if _, ok := prices[a.Pair]; !ok {
-				if price, err := FetchFuturesPrice(a.Pair); err == nil {
-					prices[a.Pair] = price
-				} else {
-					log.Printf("failed to fetch price for %s: %v", a.Pair, err)
-				}
-			}
-			if price, ok := prices[a.Pair]; ok {
-				v.CurrentPrice = &price
-			}
 		}
 		out = append(out, v)
 	}
