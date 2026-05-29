@@ -44,6 +44,35 @@ header h1 {
   font-weight: 700;
 }
 
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.filter-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+}
+
+.filter-row input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.25rem 0.65rem;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.filter-label {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
 .subtitle {
   margin: 0.15rem 0 0;
   color: var(--muted);
@@ -416,5 +445,3 @@ button.btn-secondary {
   background: var(--border);
   color: var(--text);
 }
-
-

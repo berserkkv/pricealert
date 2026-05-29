@@ -1,3 +1,3 @@
-module notifier
+module pricealert
 
 go 1.22

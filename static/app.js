@@ -14,6 +14,7 @@ const settingsToggle = document.getElementById('toggle-settings');
 const settingsBody = document.querySelector('.card-settings-body');
 const updateButton = document.getElementById('btn-update-app');
 const updateStatus = document.getElementById('update-status');
+const filterInput = document.getElementById('filter-input');
 
 const addIcon = '<span class="material-symbols-outlined" aria-hidden="true">add</span>';
 const settingsIcon = '<span class="material-symbols-outlined" aria-hidden="true">settings</span>';
@@ -21,6 +22,23 @@ const closeIcon = '<span class="material-symbols-outlined" aria-hidden="true">cl
 
 let appTimezone = 'Europe/Istanbul';
 let appTouchTolerancePercent = 0.15;
+let alertSymbolFilter = '';
+let cachedAlerts = [];
+const ALERT_FILTER_STORAGE_KEY = 'alert_symbol_filter';
+
+function normalizeFilterValue(value) {
+  return value ? value.trim().toUpperCase() : '';
+}
+
+function saveFilterValue(value) {
+  alertSymbolFilter = normalizeFilterValue(value);
+  localStorage.setItem(ALERT_FILTER_STORAGE_KEY, alertSymbolFilter);
+}
+
+function filterAlerts(alerts) {
+  if (!alertSymbolFilter) return alerts;
+  return alerts.filter((a) => a.pair && a.pair.toUpperCase().includes(alertSymbolFilter));
+}
 
 async function loadAppConfig() {
   try {
@@ -247,7 +265,8 @@ if (formLogin) {
 async function loadAlerts() {
   try {
     const alerts = await api('/api/alerts');
-    renderAlerts(alerts || []);
+    cachedAlerts = alerts || [];
+    renderAlerts(cachedAlerts);
   } catch (e) {
     const msg = escapeHtml(e.message);
     alertsBody.innerHTML =
@@ -339,13 +358,15 @@ function sortAlerts(alerts) {
 
 function renderAlerts(alerts) {
   alerts = sortAlerts(alerts);
-  if (!alerts.length) {
-    alertsBody.innerHTML = '<tr><td colspan="9" class="empty">No alerts yet</td></tr>';
-    alertsCards.innerHTML = '<p class="empty">No alerts yet</p>';
+  const visibleAlerts = filterAlerts(alerts);
+  const emptyMessage = alertSymbolFilter ? 'No alerts match filter' : 'No alerts yet';
+  if (!visibleAlerts.length) {
+    alertsBody.innerHTML = '<tr><td colspan="9" class="empty">' + emptyMessage + '</td></tr>';
+    alertsCards.innerHTML = '<p class="empty">' + emptyMessage + '</p>';
     return;
   }
 
-  alertsBody.innerHTML = alerts
+  alertsBody.innerHTML = visibleAlerts
     .map((a) => {
       const shortId = a.id.length > 12 ? '…' + a.id.slice(-8) : a.id;
       const enabled = a.enabled
@@ -365,7 +386,7 @@ function renderAlerts(alerts) {
     })
     .join('');
 
-  alertsCards.innerHTML = alerts
+  alertsCards.innerHTML = visibleAlerts
     .map((a) => {
       const enabled = a.enabled
         ? '<span class="badge on">On</span>'
@@ -396,6 +417,21 @@ function renderAlerts(alerts) {
 
   bindActions(alertsBody);
   bindActions(alertsCards);
+}
+
+function applyStoredFilter() {
+  if (!filterInput) return;
+  const stored = localStorage.getItem(ALERT_FILTER_STORAGE_KEY) || '';
+  filterInput.value = stored;
+  alertSymbolFilter = normalizeFilterValue(stored);
+}
+
+function initFilterInput() {
+  if (!filterInput) return;
+  filterInput.addEventListener('input', () => {
+    saveFilterValue(filterInput.value);
+    renderAlerts(cachedAlerts);
+  });
 }
 
 async function editAlert(id) {
@@ -520,6 +556,8 @@ document.querySelectorAll('[data-cancel]').forEach((btn) => {
   try {
     await loadAppConfig();
   } catch (_) {}
+  applyStoredFilter();
+  initFilterInput();
   loadAlerts();
   setInterval(loadAlerts, 10000);
 

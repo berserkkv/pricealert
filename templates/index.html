@@ -9,16 +9,20 @@
 </head>
 <body>
     <header>
+      <div class="header-actions">
         <button type="button" id="toggle-add-alert" class="btn-small btn-secondary" aria-expanded="false" aria-label="Add alert">
           <span class="material-symbols-outlined">add</span>
         </button>
-        
-         <button type="button" id="toggle-settings" class="btn-small btn-secondary" aria-expanded="false" aria-label="Open settings">
-           <span class="material-symbols-outlined">settings</span>
-         </button>
-      </header>
+        <button type="button" id="toggle-settings" class="btn-small btn-secondary" aria-expanded="false" aria-label="Open settings">
+          <span class="material-symbols-outlined">settings</span>
+        </button>
+      </div>
+     
+    </header>
   <main>
-   
+    <label class="filter-row">
+        <input id="filter-input" type="search" placeholder="Filter symbols (e.g. BTC, SOL)" autocomplete="off">
+      </label>
     
       <div class="card card-form card-section-body card-form-body" hidden>
           <h2>Add Alert</h2>

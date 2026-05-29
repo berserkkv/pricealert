@@ -28,5 +28,16 @@
     "p2_price": 82,
     "offset": 3,
     "trigger_side": "both"
+  },
+  {
+    "id": "1780055505115125988",
+    "pair": "BTCUSDT",
+    "type": "horizontal",
+    "enabled": true,
+    "label": "",
+    "created_at": "2026-05-29T14:51:45.115130464+03:00",
+    "last_trigger": "2026-05-29T14:51:48.128946295+03:00",
+    "target_price": 3457,
+    "condition": "above"
   }
 ]
