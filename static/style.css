@@ -59,9 +59,25 @@ main {
 }
 
 .card h2 {
-  margin: 0 0 0.85rem;
+  margin: 0;
   font-size: 1rem;
   font-weight: 600;
+}
+
+.card-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.card-section-header h2 {
+  margin: 0;
+}
+
+.card-section-body[hidden] {
+  display: none;
 }
 
 /* —— Alerts table (tablet/desktop) —— */
@@ -175,6 +191,11 @@ td.bound {
   font-size: 0.8rem;
   color: var(--muted);
   margin-bottom: 0.65rem;
+}
+.secondary {
+  gap: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  color: var(--muted);
 }
 
 .alert-card-meta span {
@@ -382,3 +403,4 @@ button.btn-secondary {
     max-width: 360px;
   }
 }
+

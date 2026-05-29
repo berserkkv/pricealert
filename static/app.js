@@ -8,6 +8,10 @@ const tabButtons = document.querySelectorAll('.tab-btn');
 const panelHorizontal = document.getElementById('panel-horizontal');
 const panelChannel = document.getElementById('panel-channel');
 const tzHint = document.getElementById('tz-hint');
+const addAlertToggle = document.getElementById('toggle-add-alert');
+const addAlertBody = document.querySelector('.card-form-body');
+const settingsToggle = document.getElementById('toggle-settings');
+const settingsBody = document.querySelector('.card-settings-body');
 
 let appTimezone = 'Europe/Istanbul';
 
@@ -68,9 +72,24 @@ function boundsCells(a) {
 function boundsCardRows(a) {
   if (a.type !== 'channel') return '';
   return (
-    '<div>Upper <span>' + fmtPrice(a.current_upper) + '</span></div>' +
-    '<div>Lower <span>' + fmtPrice(a.current_lower) + '</span></div>'
+    '<div>Lower <span>' + fmtPrice(a.current_lower) + '</span></div>' +
+    '<div>Upper <span>' + fmtPrice(a.current_upper) + '</span></div>'
   );
+}
+
+function setSectionOpen(open, body, toggle, { openLabel = 'Show', closeLabel = 'Hide' } = {}) {
+  if (!body || !toggle) return;
+  body.hidden = !open;
+  toggle.textContent = open ? closeLabel : openLabel;
+  toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+function setAddAlertOpen(open) {
+  setSectionOpen(open, addAlertBody, addAlertToggle, { openLabel: '➕', closeLabel: '✕' });
+}
+
+function setSettingsOpen(open) {
+  setSectionOpen(open, settingsBody, settingsToggle, { openLabel: '⚙️', closeLabel: '✕' });
 }
 
 function switchTab(tab, scrollToForm) {
@@ -95,6 +114,21 @@ function switchTab(tab, scrollToForm) {
 tabButtons.forEach((btn) => {
   btn.addEventListener('click', () => switchTab(btn.dataset.tab));
 });
+
+if (addAlertToggle) {
+  addAlertToggle.addEventListener('click', () => {
+    setAddAlertOpen(addAlertBody ? addAlertBody.hidden : false);
+  });
+}
+
+if (settingsToggle) {
+  settingsToggle.addEventListener('click', () => {
+    setSettingsOpen(settingsBody ? settingsBody.hidden : false);
+  });
+}
+
+setAddAlertOpen(false);
+setSettingsOpen(false);
 
 async function api(path, options = {}) {
   const token = localStorage.getItem('notifier_token');
@@ -218,13 +252,13 @@ function renderAlerts(alerts) {
       return `
         <article class="alert-card" data-id="${escapeHtml(a.id)}">
           <div class="alert-card-header">
-            <strong>${escapeHtml(a.pair)}</strong>
+            <strong>${escapeHtml(a.pair)}</strong> 
+            
             ${enabled}
           </div>
           <div class="alert-card-meta">
-            <div>Type <span class="type-badge">${escapeHtml(typeLabel(a.type))}</span></div>
+            <!--<div>Type <span class="type-badge">${escapeHtml(typeLabel(a.type))}</span></div>-->
             ${boundsCardRows(a)}
-            <div>Label <span>${escapeHtml(a.label || '—')}</span></div>
             <div>Created <span>${escapeHtml(fmtTime(a.created_at))}</span></div>
             <div>Triggered <span>${escapeHtml(fmtTime(a.last_trigger))}</span></div>
           </div>
@@ -244,6 +278,7 @@ async function editAlert(id) {
 
   if (a.type === 'horizontal') {
     switchTab('horizontal', true);
+    setAddAlertOpen(true);
     const f = formHorizontal;
     f.edit_id.value = a.id;
     f.pair.value = a.pair;
@@ -253,6 +288,7 @@ async function editAlert(id) {
     f.querySelector('[data-cancel="horizontal"]').hidden = false;
   } else {
     switchTab('channel', true);
+    setAddAlertOpen(true);
     const f = formChannel;
     f.edit_id.value = a.id;
     f.pair.value = a.pair;
