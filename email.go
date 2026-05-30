@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net/smtp"
 	"strings"
@@ -55,26 +56,16 @@ func (e *Email) SendAlert(alert Alert, detail string, price float64) error {
 		typeLabel = "Channel"
 	}
 
-	label := alert.Label
-	if label == "" {
-		label = alert.Pair
-	}
+	label := alert.Pair + " " + alert.Label
+	
 
-	subject := fmt.Sprintf("Price Alert: %s", label)
+	subject := fmt.Sprintf("%s", label)
 	body := fmt.Sprintf(
-		"Price Alert\n"+
-			"============\n\n"+
-			"Pair: %s\n"+
 			"Type: %s\n"+
-			"%s\n"+
 			"Price: %.4f\n"+
-			"Label: %s\n"+
 			"Time: %s",
-		alert.Pair,
 		typeLabel,
-		detail,
 		price,
-		label,
 		now,
 	)
 
@@ -91,20 +82,83 @@ func (e *Email) SendAlert(alert Alert, detail string, price float64) error {
 	)
 
 	addr := fmt.Sprintf("%s:%d", e.smtpHost, e.smtpPort)
-	var err error
-	
+	msgBytes := []byte(message)
+
 	if e.useTLS {
-		// For TLS connections, we would need to use smtp.Dial with TLS
-		// For simplicity, using plain SMTP; can be extended for TLS support
+		tlsConfig := &tls.Config{ServerName: e.smtpHost}
+		var client *smtp.Client
+		var err error
+
+		if e.smtpPort == 465 {
+			conn, err := tls.Dial("tcp", addr, tlsConfig)
+			if err != nil {
+				return fmt.Errorf("email TLS dial failed: %w", err)
+			}
+			client, err = smtp.NewClient(conn, e.smtpHost)
+			if err != nil {
+				return fmt.Errorf("email SMTP client failed: %w", err)
+			}
+		} else {
+			client, err = smtp.Dial(addr)
+			if err != nil {
+				return fmt.Errorf("email SMTP dial failed: %w", err)
+			}
+			if ok, _ := client.Extension("STARTTLS"); ok {
+				if err := client.StartTLS(tlsConfig); err != nil {
+					_ = client.Close()
+					return fmt.Errorf("email STARTTLS failed: %w", err)
+				}
+			} else {
+				_ = client.Close()
+				return fmt.Errorf("email server does not support STARTTLS")
+			}
+		}
+
+		if e.useAuth {
+			if err := client.Auth(e.smtpAuth); err != nil {
+				_ = client.Close()
+				return fmt.Errorf("email auth failed: %w", err)
+			}
+		}
+
+		if err := client.Mail(e.fromEmail); err != nil {
+			_ = client.Close()
+			return fmt.Errorf("email sender set failed: %w", err)
+		}
+		if err := client.Rcpt(e.toEmail); err != nil {
+			_ = client.Close()
+			return fmt.Errorf("email recipient set failed: %w", err)
+		}
+
+		w, err := client.Data()
+		if err != nil {
+			_ = client.Close()
+			return fmt.Errorf("email data open failed: %w", err)
+		}
+		_, err = w.Write(msgBytes)
+		if err != nil {
+			_ = w.Close()
+			_ = client.Close()
+			return fmt.Errorf("email data write failed: %w", err)
+		}
+		if err := w.Close(); err != nil {
+			_ = client.Close()
+			return fmt.Errorf("email data close failed: %w", err)
+		}
+		if err := client.Quit(); err != nil {
+			return fmt.Errorf("email quit failed: %w", err)
+		}
+		return nil
 	}
 
 	if e.useAuth {
-		err = smtp.SendMail(addr, e.smtpAuth, e.fromEmail, []string{e.toEmail}, []byte(message))
-	} else {
-		err = smtp.SendMail(addr, nil, e.fromEmail, []string{e.toEmail}, []byte(message))
+		if err := smtp.SendMail(addr, e.smtpAuth, e.fromEmail, []string{e.toEmail}, msgBytes); err != nil {
+			return fmt.Errorf("email send failed: %w", err)
+		}
+		return nil
 	}
 
-	if err != nil {
+	if err := smtp.SendMail(addr, nil, e.fromEmail, []string{e.toEmail}, msgBytes); err != nil {
 		return fmt.Errorf("email send failed: %w", err)
 	}
 	return nil

@@ -9,14 +9,14 @@
   "telegram_token": "8430827322:AAHeq_HiG6lCJmJwxrWPB25xX0Y20ZlB4qo",
   "telegram_chat_id": "7217926764",
   "telegram_enabled": false,
-  "email_from": "nurshatkadyrbayev@gmail.com",
+  "email_from": "nurshatc@gmail.com",
   "email_to": "4121nnn@gmail.com",
   "smtp_host": "smtp.gmail.com",
   "smtp_port": 587,
-  "smtp_user": "nurshat",
-  "smtp_password": "True-1412",
+  "smtp_user": "nurshatc@gmail.com",
+  "smtp_password": "viyg wlly iwpb svrw",
   "smtp_use_tls": true,
-  "email_enabled": false,
+  "email_enabled": true,
   "ntfy_topic": "price_alerts1412",
   "ntfy_enabled": true
 }
