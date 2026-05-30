@@ -1,0 +1,72 @@
+package main
+
+import (
+	"fmt"
+	"net/http"
+	"strings"
+	"time"
+)
+
+// Ntfy sends alert notifications via ntfy.sh service.
+type Ntfy struct {
+	topic  string
+	loc    *time.Location
+	client *http.Client
+}
+
+// NewNtfy creates a sender; empty topic means notifications are skipped.
+func NewNtfy(topic string, loc *time.Location) *Ntfy {
+	return &Ntfy{
+		topic:  strings.TrimSpace(topic),
+		loc:    loc,
+		client: &http.Client{Timeout: 10 * time.Second},
+	}
+}
+
+// SendAlert posts a formatted message to ntfy.
+func (n *Ntfy) SendAlert(alert Alert, detail string, price float64) error {
+	if n.topic == "" {
+		return nil // configured off
+	}
+
+	// now := formatWallClock(n.loc, time.Now())
+	typeLabel := "Horizontal"
+	if alert.Type == AlertChannel {
+		typeLabel = "Channel"
+	}
+
+	label := alert.Pair + " " + alert.Label
+
+	title := fmt.Sprintf("🚨 %s", label)
+	message := fmt.Sprintf(
+		"Type: %s\n%s\nPrice: %.4f",
+		typeLabel,
+		detail,
+		price,
+	)
+
+	apiURL := fmt.Sprintf("https://ntfy.sh/%s", n.topic)
+	req, err := http.NewRequest("POST", apiURL, strings.NewReader(message))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "text/plain; charset=utf-8")
+	req.Header.Set("Title", title)
+	req.Header.Set("Priority", "high")
+
+	resp, err := n.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return fmt.Errorf("ntfy API status %d", resp.StatusCode)
+	}
+	return nil
+}
+
+// Enabled reports whether Ntfy is configured.
+func (n *Ntfy) Enabled() bool {
+	return n.topic != ""
+}

@@ -33,7 +33,17 @@ func main() {
 		log.Println("telegram: not configured (set telegram_token and telegram_chat_id in config.json)")
 	}
 
-	checker := NewChecker(cfg, storage, telegram)
+	email := NewEmail(cfg.EmailFrom, cfg.EmailTo, cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPUser, cfg.SMTPPassword, cfg.SMTPUseTLS, loc)
+	if !email.Enabled() {
+		log.Println("email: not configured (set email_from, email_to, and smtp_host in config.json)")
+	}
+
+	ntfy := NewNtfy(cfg.NtfyTopic, loc)
+	if !ntfy.Enabled() {
+		log.Println("ntfy: not configured (set ntfy_topic in config.json)")
+	}
+
+	checker := NewChecker(cfg, storage, telegram, email, ntfy)
 	stop := make(chan struct{})
 
 	go checker.Run(stop)

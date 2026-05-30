@@ -12,6 +12,8 @@ type Checker struct {
 	cfg      Config
 	storage  *Storage
 	telegram *Telegram
+	email    *Email
+	ntfy     *Ntfy
 
 	mu          sync.Mutex
 	lastPrices  map[string]float64 // alert ID -> last price (horizontal crossing)
@@ -19,13 +21,37 @@ type Checker struct {
 }
 
 // NewChecker creates the price monitor.
-func NewChecker(cfg Config, storage *Storage, telegram *Telegram) *Checker {
+func NewChecker(cfg Config, storage *Storage, telegram *Telegram, email *Email, ntfy *Ntfy) *Checker {
 	return &Checker{
 		cfg:         cfg,
 		storage:     storage,
 		telegram:    telegram,
+		email:       email,
+		ntfy:        ntfy,
 		lastPrices:  make(map[string]float64),
 		wasTouching: make(map[string]bool),
+	}
+}
+
+// sendAlert sends the alert via all enabled notifiers.
+func (c *Checker) sendAlert(alert Alert, detail string, price float64) {
+	// Send via Telegram
+	if c.cfg.TelegramEnabled && c.telegram.Enabled() {
+		if err := c.telegram.SendAlert(alert, detail, price); err != nil {
+			log.Printf("telegram: %v", err)
+		}
+	}
+	// Send via Email
+	if c.cfg.EmailEnabled && c.email.Enabled() {
+		if err := c.email.SendAlert(alert, detail, price); err != nil {
+			log.Printf("email: %v", err)
+		}
+	}
+	// Send via Ntfy
+	if c.cfg.NtfyEnabled && c.ntfy.Enabled() {
+		if err := c.ntfy.SendAlert(alert, detail, price); err != nil {
+			log.Printf("ntfy: %v", err)
+		}
 	}
 }
 
@@ -122,9 +148,7 @@ func (c *Checker) checkHorizontal(alert Alert, price float64) {
 	}
 
 	detail := FormatHorizontalDetail(alert.Condition)
-	if err := c.telegram.SendAlert(alert, detail, price); err != nil {
-		log.Printf("telegram: %v", err)
-	}
+	c.sendAlert(alert, detail, price)
 	_ = c.storage.SetLastTrigger(alert.ID, time.Now())
 }
 
@@ -182,9 +206,7 @@ func (c *Checker) checkChannel(alert Alert, price float64) {
 	}
 
 	detail := FormatTouchDetail(touched)
-	if err := c.telegram.SendAlert(alert, detail, price); err != nil {
-		log.Printf("telegram: %v", err)
-	}
+	c.sendAlert(alert, detail, price)
 	_ = c.storage.SetLastTrigger(alert.ID, time.Now())
 }
 

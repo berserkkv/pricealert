@@ -10,12 +10,29 @@ type Config struct {
 	HTTPPort              int     `json:"http_port"`
 	PollIntervalSec       int     `json:"poll_interval_sec"`
 	BinanceSymbol         string  `json:"binance_symbol"`
-	TelegramToken         string  `json:"telegram_token"`
-	TelegramChatID        string  `json:"telegram_chat_id"`
 	StorageFile           string  `json:"storage_file"`
 	TouchTolerancePercent float64 `json:"touch_tolerance_percent"`
 	UTC                   string  `json:"utc"` // IANA timezone for channel datetimes, e.g. Europe/Istanbul
 	AccessToken           string  `json:"access_token,omitempty"`
+
+	// Telegram notification settings
+	TelegramToken   string `json:"telegram_token"`
+	TelegramChatID  string `json:"telegram_chat_id"`
+	TelegramEnabled bool   `json:"telegram_enabled"`
+
+	// Email notification settings
+	EmailFrom       string `json:"email_from"`
+	EmailTo         string `json:"email_to"`
+	SMTPHost        string `json:"smtp_host"`
+	SMTPPort        int    `json:"smtp_port"`
+	SMTPUser        string `json:"smtp_user"`
+	SMTPPassword    string `json:"smtp_password"`
+	SMTPUseTLS      bool   `json:"smtp_use_tls"`
+	EmailEnabled    bool   `json:"email_enabled"`
+
+	// Ntfy notification settings
+	NtfyTopic   string `json:"ntfy_topic"`
+	NtfyEnabled bool   `json:"ntfy_enabled"`
 }
 
 // defaultConfig returns built-in defaults.
@@ -24,11 +41,22 @@ func defaultConfig() Config {
 		HTTPPort:              8080,
 		PollIntervalSec:       5,
 		BinanceSymbol:         "SOLUSDT",
-		TelegramToken:         "",
-		TelegramChatID:        "",
 		StorageFile:           "alerts.json",
 		TouchTolerancePercent: 0.15,
 		UTC:                   "Europe/Istanbul",
+		TelegramToken:         "",
+		TelegramChatID:        "",
+		TelegramEnabled:       false,
+		EmailFrom:             "",
+		EmailTo:               "",
+		SMTPHost:              "",
+		SMTPPort:              587,
+		SMTPUser:              "",
+		SMTPPassword:          "",
+		SMTPUseTLS:            true,
+		EmailEnabled:          false,
+		NtfyTopic:             "price_alerts1412",
+		NtfyEnabled:           false,
 	}
 }
 
@@ -65,6 +93,33 @@ func LoadConfig(path string) (Config, error) {
 	if fileCfg.TelegramChatID != "" {
 		cfg.TelegramChatID = fileCfg.TelegramChatID
 	}
+	cfg.TelegramEnabled = fileCfg.TelegramEnabled
+	if fileCfg.EmailFrom != "" {
+		cfg.EmailFrom = fileCfg.EmailFrom
+	}
+	if fileCfg.EmailTo != "" {
+		cfg.EmailTo = fileCfg.EmailTo
+	}
+	if fileCfg.SMTPHost != "" {
+		cfg.SMTPHost = fileCfg.SMTPHost
+	}
+	if fileCfg.SMTPPort != 0 {
+		cfg.SMTPPort = fileCfg.SMTPPort
+	}
+	if fileCfg.SMTPUser != "" {
+		cfg.SMTPUser = fileCfg.SMTPUser
+	}
+	if fileCfg.SMTPPassword != "" {
+		cfg.SMTPPassword = fileCfg.SMTPPassword
+	}
+	if fileCfg.SMTPUseTLS {
+		cfg.SMTPUseTLS = fileCfg.SMTPUseTLS
+	}
+	cfg.EmailEnabled = fileCfg.EmailEnabled
+	if fileCfg.NtfyTopic != "" {
+		cfg.NtfyTopic = fileCfg.NtfyTopic
+	}
+	cfg.NtfyEnabled = fileCfg.NtfyEnabled
 	if fileCfg.StorageFile != "" {
 		cfg.StorageFile = fileCfg.StorageFile
 	}

@@ -247,10 +247,21 @@ func (w *Web) handleLogin(rw http.ResponseWriter, r *http.Request) {
 func (w *Web) handleGetSettings(rw http.ResponseWriter, r *http.Request) {
 	out := map[string]any{
 		"utc":                     w.cfg.UTC,
-		"telegram_token":          w.cfg.TelegramToken,
-		"telegram_chat_id":        w.cfg.TelegramChatID,
 		"touch_tolerance_percent": w.cfg.TouchTolerancePercent,
 		"poll_interval_sec":       w.cfg.PollIntervalSec,
+		"telegram_token":          w.cfg.TelegramToken,
+		"telegram_chat_id":        w.cfg.TelegramChatID,
+		"telegram_enabled":        w.cfg.TelegramEnabled,
+		"email_from":              w.cfg.EmailFrom,
+		"email_to":                w.cfg.EmailTo,
+		"smtp_host":               w.cfg.SMTPHost,
+		"smtp_port":               w.cfg.SMTPPort,
+		"smtp_user":               w.cfg.SMTPUser,
+		"smtp_password":           w.cfg.SMTPPassword,
+		"smtp_use_tls":            w.cfg.SMTPUseTLS,
+		"email_enabled":           w.cfg.EmailEnabled,
+		"ntfy_topic":              w.cfg.NtfyTopic,
+		"ntfy_enabled":            w.cfg.NtfyEnabled,
 	}
 	writeJSON(rw, out)
 }
@@ -258,11 +269,22 @@ func (w *Web) handleGetSettings(rw http.ResponseWriter, r *http.Request) {
 // handleUpdateSettings updates selected config fields and persists them.
 func (w *Web) handleUpdateSettings(rw http.ResponseWriter, r *http.Request) {
 	var in struct {
-		UTC                   *string  `json:"utc"`
-		TelegramToken         *string  `json:"telegram_token"`
-		TelegramChatID        *string  `json:"telegram_chat_id"`
+		UTC                   *string `json:"utc"`
 		TouchTolerancePercent *float64 `json:"touch_tolerance_percent"`
 		PollIntervalSec       *int     `json:"poll_interval_sec"`
+		TelegramToken         *string  `json:"telegram_token"`
+		TelegramChatID        *string  `json:"telegram_chat_id"`
+		TelegramEnabled       *bool    `json:"telegram_enabled"`
+		EmailFrom             *string  `json:"email_from"`
+		EmailTo               *string  `json:"email_to"`
+		SMTPHost              *string  `json:"smtp_host"`
+		SMTPPort              *int     `json:"smtp_port"`
+		SMTPUser              *string  `json:"smtp_user"`
+		SMTPPassword          *string  `json:"smtp_password"`
+		SMTPUseTLS            *bool    `json:"smtp_use_tls"`
+		EmailEnabled          *bool    `json:"email_enabled"`
+		NtfyTopic             *string  `json:"ntfy_topic"`
+		NtfyEnabled           *bool    `json:"ntfy_enabled"`
 	}
 	dec := json.NewDecoder(r.Body)
 	if err := dec.Decode(&in); err != nil {
@@ -272,17 +294,50 @@ func (w *Web) handleUpdateSettings(rw http.ResponseWriter, r *http.Request) {
 	if in.UTC != nil {
 		w.cfg.UTC = *in.UTC
 	}
+	if in.TouchTolerancePercent != nil {
+		w.cfg.TouchTolerancePercent = *in.TouchTolerancePercent
+	}
+	if in.PollIntervalSec != nil {
+		w.cfg.PollIntervalSec = *in.PollIntervalSec
+	}
 	if in.TelegramToken != nil {
 		w.cfg.TelegramToken = *in.TelegramToken
 	}
 	if in.TelegramChatID != nil {
 		w.cfg.TelegramChatID = *in.TelegramChatID
 	}
-	if in.TouchTolerancePercent != nil {
-		w.cfg.TouchTolerancePercent = *in.TouchTolerancePercent
+	if in.TelegramEnabled != nil {
+		w.cfg.TelegramEnabled = *in.TelegramEnabled
 	}
-	if in.PollIntervalSec != nil {
-		w.cfg.PollIntervalSec = *in.PollIntervalSec
+	if in.EmailFrom != nil {
+		w.cfg.EmailFrom = *in.EmailFrom
+	}
+	if in.EmailTo != nil {
+		w.cfg.EmailTo = *in.EmailTo
+	}
+	if in.SMTPHost != nil {
+		w.cfg.SMTPHost = *in.SMTPHost
+	}
+	if in.SMTPPort != nil {
+		w.cfg.SMTPPort = *in.SMTPPort
+	}
+	if in.SMTPUser != nil {
+		w.cfg.SMTPUser = *in.SMTPUser
+	}
+	if in.SMTPPassword != nil {
+		w.cfg.SMTPPassword = *in.SMTPPassword
+	}
+	if in.SMTPUseTLS != nil {
+		w.cfg.SMTPUseTLS = *in.SMTPUseTLS
+	}
+	if in.EmailEnabled != nil {
+		w.cfg.EmailEnabled = *in.EmailEnabled
+	}
+	if in.NtfyTopic != nil {
+		w.cfg.NtfyTopic = *in.NtfyTopic
+	}
+	if in.NtfyEnabled != nil {
+		w.cfg.NtfyEnabled = *in.NtfyEnabled
 	}
 
 	if err := SaveConfig(w.cfgPath, *w.cfg); err != nil {

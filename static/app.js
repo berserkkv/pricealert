@@ -589,6 +589,17 @@ document.querySelectorAll('[data-cancel]').forEach((btn) => {
       f.utc.value = s.utc || '';
       f.telegram_token.value = s.telegram_token || '';
       f.telegram_chat_id.value = s.telegram_chat_id || '';
+      f.telegram_enabled.checked = s.telegram_enabled || false;
+      f.email_from.value = s.email_from || '';
+      f.email_to.value = s.email_to || '';
+      f.smtp_host.value = s.smtp_host || '';
+      f.smtp_port.value = s.smtp_port || '';
+      f.smtp_user.value = s.smtp_user || '';
+      f.smtp_password.value = s.smtp_password || '';
+      f.smtp_use_tls.checked = s.smtp_use_tls || false;
+      f.email_enabled.checked = s.email_enabled || false;
+      f.ntfy_topic.value = s.ntfy_topic || '';
+      f.ntfy_enabled.checked = s.ntfy_enabled || false;
       f.touch_tolerance_percent.value = s.touch_tolerance_percent || '';
       f.poll_interval_sec.value = s.poll_interval_sec || '';
       if (s.touch_tolerance_percent != null) {
@@ -606,6 +617,17 @@ document.querySelectorAll('[data-cancel]').forEach((btn) => {
         utc: f.utc.value.trim(),
         telegram_token: f.telegram_token.value.trim(),
         telegram_chat_id: f.telegram_chat_id.value.trim(),
+        telegram_enabled: f.telegram_enabled.checked,
+        email_from: f.email_from.value.trim(),
+        email_to: f.email_to.value.trim(),
+        smtp_host: f.smtp_host.value.trim(),
+        smtp_port: parseInt(f.smtp_port.value) || undefined,
+        smtp_user: f.smtp_user.value.trim(),
+        smtp_password: f.smtp_password.value.trim(),
+        smtp_use_tls: f.smtp_use_tls.checked,
+        email_enabled: f.email_enabled.checked,
+        ntfy_topic: f.ntfy_topic.value.trim(),
+        ntfy_enabled: f.ntfy_enabled.checked,
         touch_tolerance_percent: parseFloat(f.touch_tolerance_percent.value) || undefined,
         poll_interval_sec: parseInt(f.poll_interval_sec.value) || undefined,
       };

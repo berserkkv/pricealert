@@ -121,11 +121,38 @@
        
       </div>
         <form id="form-settings">
-          <label>Timezone (IANA) <input name="utc" placeholder="Europe/Istanbul"></label>
-          <label>Telegram token <input name="telegram_token" placeholder="bot token"></label>
-          <label>Telegram chat id <input name="telegram_chat_id" placeholder="chat id"></label>
-          <label>Touch tolerance % <input name="touch_tolerance_percent" type="number" step="any"></label>
-          <label>Poll interval (sec) <input name="poll_interval_sec" type="number" step="1"></label>
+          <fieldset>
+            <legend>General</legend>
+            <label>Timezone (IANA) <input name="utc" placeholder="Europe/Istanbul"></label>
+            <label>Touch tolerance % <input name="touch_tolerance_percent" type="number" step="any"></label>
+            <label>Poll interval (sec) <input name="poll_interval_sec" type="number" step="1"></label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Telegram</legend>
+            <label><input name="telegram_enabled" type="checkbox"> Enable Telegram</label>
+            <label>Token <input name="telegram_token" placeholder="bot token"></label>
+            <label>Chat ID <input name="telegram_chat_id" placeholder="chat id"></label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Email</legend>
+            <label><input name="email_enabled" type="checkbox"> Enable Email</label>
+            <label>From <input name="email_from" placeholder="sender@example.com"></label>
+            <label>To <input name="email_to" placeholder="recipient@example.com"></label>
+            <label>SMTP Host <input name="smtp_host" placeholder="smtp.example.com"></label>
+            <label>SMTP Port <input name="smtp_port" type="number" step="1" value="587"></label>
+            <label>SMTP User <input name="smtp_user" placeholder="username"></label>
+            <label>SMTP Password <input name="smtp_password" type="password" placeholder="password"></label>
+            <label><input name="smtp_use_tls" type="checkbox"> Use TLS</label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Ntfy (ntfy.sh)</legend>
+            <label><input name="ntfy_enabled" type="checkbox"> Enable Ntfy</label>
+            <label>Topic <input name="ntfy_topic" placeholder="price_alerts1412"></label>
+          </fieldset>
+
           <div class="form-actions">
             <button type="submit" class="btn-primary">Save Settings</button>
             <button type="button" id="btn-update-app" class="btn-secondary">Update App</button>
