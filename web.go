@@ -261,6 +261,7 @@ func (w *Web) handleGetSettings(rw http.ResponseWriter, r *http.Request) {
 		"smtp_use_tls":            w.cfg.SMTPUseTLS,
 		"email_enabled":           w.cfg.EmailEnabled,
 		"ntfy_topic":              w.cfg.NtfyTopic,
+		"ntfy_port":               w.cfg.NtfyPort,
 		"ntfy_enabled":            w.cfg.NtfyEnabled,
 	}
 	writeJSON(rw, out)
@@ -284,6 +285,7 @@ func (w *Web) handleUpdateSettings(rw http.ResponseWriter, r *http.Request) {
 		SMTPUseTLS            *bool    `json:"smtp_use_tls"`
 		EmailEnabled          *bool    `json:"email_enabled"`
 		NtfyTopic             *string  `json:"ntfy_topic"`
+		NtfyPort              *int     `json:"ntfy_port"`
 		NtfyEnabled           *bool    `json:"ntfy_enabled"`
 	}
 	dec := json.NewDecoder(r.Body)
@@ -335,6 +337,9 @@ func (w *Web) handleUpdateSettings(rw http.ResponseWriter, r *http.Request) {
 	}
 	if in.NtfyTopic != nil {
 		w.cfg.NtfyTopic = *in.NtfyTopic
+	}
+	if in.NtfyPort != nil {
+		w.cfg.NtfyPort = *in.NtfyPort
 	}
 	if in.NtfyEnabled != nil {
 		w.cfg.NtfyEnabled = *in.NtfyEnabled

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -38,7 +39,14 @@ func main() {
 		log.Println("email: not configured (set email_from, email_to, and smtp_host in config.json)")
 	}
 
-	ntfy := NewNtfy(cfg.NtfyTopic, loc)
+	ntfyPort := cfg.NtfyPort
+	if ntfyPort <= 0 {
+		ntfyPort = 8090
+	}
+	ntfyBaseURL := fmt.Sprintf("http://127.0.0.1:%d", ntfyPort)
+	ntfySrv := StartNtfyServer(ntfyPort)
+
+	ntfy := NewNtfy(cfg.NtfyTopic, ntfyBaseURL, loc)
 	if !ntfy.Enabled() {
 		log.Println("ntfy: not configured (set ntfy_topic in config.json)")
 	}
@@ -61,4 +69,5 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	_ = srv.Shutdown(ctx)
+	_ = ntfySrv.Shutdown(ctx)
 }

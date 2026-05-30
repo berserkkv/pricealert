@@ -116,6 +116,39 @@ An alert fires when market price enters the tolerance band around the chosen bou
 | POST   | `/api/alerts/{id}/toggle` | Enable/disable  |
 
 
+## Ntfy (local, no ntfy.sh)
+
+Pricealert embeds a small [ntfy](https://ntfy.sh)-compatible server on port **8090** (configurable via `ntfy_port`). Alerts are published only to your machine; nothing is sent to public ntfy.sh.
+
+1. In `config.json`, set `ntfy_enabled`: true and `ntfy_topic` (e.g. `price_alerts1412`).
+2. Restart the app. Logs show: `ntfy (local) http://0.0.0.0:8090`.
+
+### Subscribe on Android (ntfy app)
+
+1. Install [ntfy for Android](https://play.google.com/store/apps/details?id=io.heckel.ntfy) (or F-Droid).
+2. Find your PC/server **LAN IP** (e.g. `192.168.1.50`) — the phone must be on the same Wi‑Fi.
+3. In the ntfy app: **⋮ → Settings → Default server** → enter:
+   ```
+   http://192.168.1.50:8090
+   ```
+   (Use your real IP and port if you changed `ntfy_port`.)
+4. Tap **+** to add a subscription and enter the **same topic** as in config, e.g. `price_alerts1412`.
+5. Allow notifications when prompted.
+
+**Note:** HTTP (not HTTPS) on a private LAN is normal for a home server. If the app refuses cleartext HTTP, use a reverse proxy with TLS or check the app’s “allow insecure connection” option for custom servers.
+
+Test from another machine on the LAN:
+
+```bash
+curl -d "test" -H "Title: Hello" http://192.168.1.50:8090/price_alerts1412
+```
+
+| Key            | Default             | Description                          |
+| -------------- | ------------------- | ------------------------------------ |
+| `ntfy_enabled` | `false`             | Send alerts via local ntfy           |
+| `ntfy_topic`   | `price_alerts1412`  | Topic name (subscribe to this in app)|
+| `ntfy_port`    | `8090`              | Local ntfy server port               |
+
 ## Telegram setup
 
 1. Create a bot via [@BotFather](https://t.me/BotFather) and copy the token.

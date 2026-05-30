@@ -7,19 +7,25 @@ import (
 	"time"
 )
 
-// Ntfy sends alert notifications via ntfy.sh service.
+// Ntfy sends alert notifications to the embedded local ntfy server.
 type Ntfy struct {
-	topic  string
-	loc    *time.Location
-	client *http.Client
+	topic   string
+	baseURL string
+	loc     *time.Location
+	client  *http.Client
 }
 
 // NewNtfy creates a sender; empty topic means notifications are skipped.
-func NewNtfy(topic string, loc *time.Location) *Ntfy {
+func NewNtfy(topic, baseURL string, loc *time.Location) *Ntfy {
+	baseURL = strings.TrimRight(strings.TrimSpace(baseURL), "/")
+	if baseURL == "" {
+		baseURL = "http://127.0.0.1:8090"
+	}
 	return &Ntfy{
-		topic:  strings.TrimSpace(topic),
-		loc:    loc,
-		client: &http.Client{Timeout: 10 * time.Second},
+		topic:   strings.TrimSpace(topic),
+		baseURL: baseURL,
+		loc:     loc,
+		client:  &http.Client{Timeout: 10 * time.Second},
 	}
 }
 
@@ -45,7 +51,7 @@ func (n *Ntfy) SendAlert(alert Alert, detail string, price float64) error {
 		price,
 	)
 
-	apiURL := fmt.Sprintf("https://ntfy.sh/%s", n.topic)
+	apiURL := fmt.Sprintf("%s/%s", n.baseURL, n.topic)
 	req, err := http.NewRequest("POST", apiURL, strings.NewReader(message))
 	if err != nil {
 		return err

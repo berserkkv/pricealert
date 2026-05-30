@@ -599,6 +599,7 @@ document.querySelectorAll('[data-cancel]').forEach((btn) => {
       f.smtp_use_tls.checked = s.smtp_use_tls || false;
       f.email_enabled.checked = s.email_enabled || false;
       f.ntfy_topic.value = s.ntfy_topic || '';
+      f.ntfy_port.value = s.ntfy_port || 8090;
       f.ntfy_enabled.checked = s.ntfy_enabled || false;
       f.touch_tolerance_percent.value = s.touch_tolerance_percent || '';
       f.poll_interval_sec.value = s.poll_interval_sec || '';
@@ -627,6 +628,7 @@ document.querySelectorAll('[data-cancel]').forEach((btn) => {
         smtp_use_tls: f.smtp_use_tls.checked,
         email_enabled: f.email_enabled.checked,
         ntfy_topic: f.ntfy_topic.value.trim(),
+        ntfy_port: parseInt(f.ntfy_port.value) || undefined,
         ntfy_enabled: f.ntfy_enabled.checked,
         touch_tolerance_percent: parseFloat(f.touch_tolerance_percent.value) || undefined,
         poll_interval_sec: parseInt(f.poll_interval_sec.value) || undefined,

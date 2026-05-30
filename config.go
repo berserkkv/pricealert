@@ -30,8 +30,9 @@ type Config struct {
 	SMTPUseTLS      bool   `json:"smtp_use_tls"`
 	EmailEnabled    bool   `json:"email_enabled"`
 
-	// Ntfy notification settings
+	// Ntfy notification settings (local server, ntfy-app compatible)
 	NtfyTopic   string `json:"ntfy_topic"`
+	NtfyPort    int    `json:"ntfy_port"`
 	NtfyEnabled bool   `json:"ntfy_enabled"`
 }
 
@@ -56,6 +57,7 @@ func defaultConfig() Config {
 		SMTPUseTLS:            true,
 		EmailEnabled:          false,
 		NtfyTopic:             "price_alerts1412",
+		NtfyPort:              8090,
 		NtfyEnabled:           false,
 	}
 }
@@ -118,6 +120,9 @@ func LoadConfig(path string) (Config, error) {
 	cfg.EmailEnabled = fileCfg.EmailEnabled
 	if fileCfg.NtfyTopic != "" {
 		cfg.NtfyTopic = fileCfg.NtfyTopic
+	}
+	if fileCfg.NtfyPort != 0 {
+		cfg.NtfyPort = fileCfg.NtfyPort
 	}
 	cfg.NtfyEnabled = fileCfg.NtfyEnabled
 	if fileCfg.StorageFile != "" {

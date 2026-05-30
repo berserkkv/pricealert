@@ -148,9 +148,11 @@
           </fieldset>
 
           <fieldset>
-            <legend>Ntfy (ntfy.sh)</legend>
+            <legend>Ntfy (local)</legend>
             <label><input name="ntfy_enabled" type="checkbox"> Enable Ntfy</label>
             <label>Topic <input name="ntfy_topic" placeholder="price_alerts1412"></label>
+            <label>Port <input name="ntfy_port" type="number" step="1" value="8090" title="Local ntfy server port (default 8090)"></label>
+            <p class="field-hint">Runs on this machine only. In the ntfy app set Default server to <code>http://YOUR_LAN_IP:8090</code> and subscribe to the topic above.</p>
           </fieldset>
 
           <div class="form-actions">
